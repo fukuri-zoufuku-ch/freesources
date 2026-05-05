@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>操作説明 — 資産運用シミュレーター</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --green: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-mid: #1D9E75;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --coral: #C04B20;
+    --coral-light: #FDF0EA;
+    --text: #1a1a1a;
+    --text-sec: #5a5a5a;
+    --border: #e2e2e2;
+    --bg: #f9f8f6;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── ヘッダー ── */
+  .hero {
+    background: var(--green);
+    padding: 3.5rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 24px,
+      rgba(255,255,255,0.03) 24px,
+      rgba(255,255,255,0.03) 25px
+    );
+  }
+  .hero-inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: #9FE1CB;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+  .hero p {
+    font-size: 14px;
+    color: #5DCAA5;
+    font-weight: 300;
+  }
+
+  /* ── レイアウト ── */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* ── セクション ── */
+  .section { margin-bottom: 3rem; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── モードカード ── */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  @media(max-width:560px){ .mode-grid { grid-template-columns: 1fr; } }
+  .mode-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .mode-card.green::before { background: var(--green-mid); }
+  .mode-card.blue::before  { background: var(--blue); }
+  .mode-card.purple::before{ background: var(--purple); }
+  .mode-card.coral::before { background: var(--coral); }
+  .mode-card.wide { grid-column: 1 / -1; }
+
+  .mode-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+  .mode-badge.green  { background: var(--green-light);  color: var(--green); }
+  .mode-badge.blue   { background: var(--blue-light);   color: var(--blue); }
+  .mode-badge.purple { background: var(--purple-light); color: var(--purple); }
+  .mode-badge.coral  { background: var(--coral-light);  color: var(--coral); }
+
+  .mode-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .mode-card p  { font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+
+  .mode-inputs {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .mode-inputs-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-sec);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .input-tag {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 2px 8px;
+    margin: 2px 3px 2px 0;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-sec);
+  }
+
+  /* ── ステップ ── */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: flex;
+    gap: 1.25rem;
+    position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 40px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    position: relative;
+    z-index: 1;
+  }
+  .step-body { padding-bottom: 1.75rem; flex: 1; min-width: 0; }
+  .step-body h4 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+  .step-body p  { font-size: 13px; color: var(--text-sec); line-height: 1.65; }
+
+  /* ── 機能ポイント ── */
+  .feature-list { display: flex; flex-direction: column; gap: 10px; }
+  .feature-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .feature-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .feature-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .feature-item p  { font-size: 13px; color: var(--text-sec); line-height: 1.6; }
+
+  /* ── 注意事項 ── */
+  .note-box {
+    background: #FFFBEB;
+    border: 1px solid #F5D85A;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    color: #6B5700;
+    line-height: 1.7;
+  }
+  .note-box strong { color: #4A3C00; }
+
+  /* ── 共通利回りガイド ── */
+  .rate-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media(max-width:480px){ .rate-grid { grid-template-columns: 1fr 1fr; } }
+  .rate-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .rate-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+  .rate-label { font-size: 12px; color: var(--text-sec); }
+
+  /* ── フッター ── */
+  .footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 12px;
+    color: #aaa;
+    border-top: 1px solid var(--border);
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">操作マニュアル</div>
+    <h1>資産運用シミュレーター</h1>
+    <p>4つのシミュレーションモードで将来の資産を試算できます</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 概要 -->
+  <div class="section">
+    <div class="section-label">Overview</div>
+    <div class="section-title">このアプリについて</div>
+    <p style="font-size:14px;color:var(--text-sec);margin-bottom:1rem;line-height:1.75">
+      資産運用シミュレーターは、月次複利計算をベースに将来の資産推移を手軽に試算できるツールです。
+      毎月の積立から、複雑な利回り変更・追加投資、目標金額からの逆算まで、4種類のシミュレーションに対応しています。
+      <br><br>
+      <strong>複利の付与は全てのシミュレーションで月利です。</strong>年利で入力した値を自動的に月利（年利 ÷ 12）に変換して計算します。
+    </p>
+    <div class="note-box">
+      <strong>⚠️ ご注意：</strong>本アプリは試算・学習目的のツールです。実際の金融商品の運用成果を保証するものではありません。投資判断は自己責任で行ってください。
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4つのモード -->
+  <div class="section">
+    <div class="section-label">Modes</div>
+    <div class="section-title">4つのシミュレーションモード</div>
+    <div class="mode-grid">
+
+      <div class="mode-card green">
+        <div class="mode-badge green">モード①</div>
+        <h3>積立シミュレーション</h3>
+        <p>毎月一定額を積み立て、複利運用した場合の最終資産を計算します。最もシンプルなモードです。</p>
+        <div class="mode-inputs">
+          <div class="mode-inputs-title">入力項目</div>
+          <span class="input-tag">運用期間（月）</span>
+          <span class="input-tag">年利（%）</span>
+          <span class="input-tag">毎月の積立額（千円）</span>
+        </div>
+      </div>
+
+      <div class="mode-card blue">
+        <div class="mode-badge blue">モード②</div>
+        <h3>複合シミュレーション</h3>
+        <p>初期投資額を元に運用しながら、途中での利回り変更・追加投資・引き出しをイベントとして最大4件設定できます。</p>
+        <div class="mode-inputs">
+          <div class="mode-inputs-title">入力項目</div>
+          <span class="input-tag">運用期間（月）</span>
+          <span class="input-tag">初期年利（%）</span>
+          <span class="input-tag">初期投資額（千円）</span>
+          <span class="input-tag">イベント（最大4件）</span>
+        </div>
+      </div>
+
+      <div class="mode-card purple">
+        <div class="mode-badge purple">モード③</div>
+        <h3>積立×複合シミュレーション</h3>
+        <p>毎月の積立を継続しながら、途中で利回り変更・積立額の増額・減額をイベントとして設定できます。ライフステージの変化に合わせた試算に対応します。</p>
+        <div class="mode-inputs">
+          <div class="mode-inputs-title">入力項目</div>
+          <span class="input-tag">運用期間（月）</span>
+          <span class="input-tag">初期年利（%）</span>
+          <span class="input-tag">初期積立額（千円）</span>
+          <span class="input-tag">イベント（最大4件）</span>
+        </div>
+      </div>
+
+      <div class="mode-card coral">
+        <div class="mode-badge coral">モード④</div>
+        <h3>目標金額 逆算</h3>
+        <p>目標金額と条件から、必要な月額積立・初期投入額・必要な運用期間を逆算します。3つのタブで切り替えできます。</p>
+        <div class="mode-inputs">
+          <div class="mode-inputs-title">3タブで切り替え</div>
+          <span class="input-tag">月額積立を逆算</span>
+          <span class="input-tag">初期投入額を逆算</span>
+          <span class="input-tag">必要期間を逆算</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 基本操作ステップ -->
+  <div class="section">
+    <div class="section-label">How to Use</div>
+    <div class="section-title">基本的な使い方</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>モードを選択する</h4>
+          <p>トップ画面に表示される4つのボタンから、試算したいシミュレーションモードをタップして選択します。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>金額を千円単位で入力する</h4>
+          <p>金額の入力はすべて <strong>千円単位</strong> です。例えば100万円を入力したい場合は <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:1px 6px;border-radius:4px;font-size:13px">1000</code> と入力します。入力欄の右側に「千円」と表示されています。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>課税設定を選択する</h4>
+          <p>利息に対する課税方式を選択します。<strong>「非課税（NISA等）」</strong>または<strong>「課税（源泉20.315%）」</strong>から選べます。デフォルトは非課税です。課税を選ぶと毎月の利息から20.315%が源泉徴収された後の金額で複利計算されます。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>「計算する」ボタンを押す</h4>
+          <p>入力完了後、緑・青・紫・オレンジ色の「計算する」ボタンを押すと結果が表示されます。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>結果・グラフ・月次明細を確認する</h4>
+          <p>計算結果として最終運用額・元本合計・運用益・元本利回りの4指標が表示されます。グラフ（実線：残高、破線：元本）とスクロール可能な月次明細テーブルも確認できます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- イベント設定 -->
+  <div class="section">
+    <div class="section-label">Events</div>
+    <div class="section-title">イベント設定の使い方（モード②③）</div>
+    <p style="font-size:14px;color:var(--text-sec);margin-bottom:1.25rem;line-height:1.75">
+      モード②・③では「イベント」を最大4件設定できます。特定の月に条件を変化させることで、より実態に近い試算が可能です。
+    </p>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#E6F1FB">📅</div>
+        <div>
+          <h4>発生月の指定</h4>
+          <p>何ヶ月目にイベントを発生させるかを整数で入力します。例えば運用開始から5年後なら <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px">60</code> と入力します。同じ月に複数のイベントを設定することはできません。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#E1F5EE">📈</div>
+        <div>
+          <h4>年利の変更（任意）</h4>
+          <p>その月以降の年利を変更したい場合に入力します。空欄にすると変更なしとして扱われます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#E6F1FB">💰</div>
+        <div>
+          <h4>追加投資・引き出し（モード②のみ、任意）</h4>
+          <p>その月に追加投資または引き出しを行う場合に千円単位で入力します。残高を超える引き出しは残高0円で処理されます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#EEEDFE">🔄</div>
+        <div>
+          <h4>積立額の変更（モード③のみ、任意）</h4>
+          <p>その月から積立額を変更する場合に、<strong>変更後の新しい金額</strong>を千円単位で入力します。増額・減額どちらも対応しています。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 便利機能 -->
+  <div class="section">
+    <div class="section-label">Features</div>
+    <div class="section-title">便利な機能</div>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#E1F5EE">📊</div>
+        <div>
+          <h4>シナリオ比較</h4>
+          <p>モード①②③でそれぞれ利用できます。「シナリオ比較」ボタンを押すと比較パネルが開き、現在の入力値（ベース）に対して最大3件の比較案を追加できます。複数の条件を1つのグラフで比較できます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#FDF0EA">🔍</div>
+        <div>
+          <h4>グラフのホバー表示</h4>
+          <p>グラフ上にマウスポインターを当てると、その月の残高と元本の具体的な金額がポップアップで表示されます。イベント発生月はオレンジ色の点でマークされます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#E1F5EE">📋</div>
+        <div>
+          <h4>月次明細テーブル</h4>
+          <p>計算結果の下に月ごとの元本累計・運用残高・運用益・利益率の一覧が表示されます。「▲ 折りたたむ」ボタンで表示・非表示を切り替えられます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon" style="background:#FAECE7">🔄</div>
+        <div>
+          <h4>リセットボタン</h4>
+          <p>各シミュレーション画面の右上にある「リセット」ボタンを押すと、入力値・イベント・計算結果・グラフをすべて初期状態に戻せます。確認ダイアログが表示されます。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 年利の目安 -->
+  <div class="section">
+    <div class="section-label">Reference</div>
+    <div class="section-title">年利の目安</div>
+    <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem">一般的な金融商品の年利の参考値です。実際の運用成果は市場環境により異なります。</p>
+    <div class="rate-grid">
+      <div class="rate-card">
+        <div class="rate-val">0.1〜1%</div>
+        <div class="rate-label">定期預金・国債</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-val">2〜4%</div>
+        <div class="rate-label">債券中心の投資信託</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-val">4〜7%</div>
+        <div class="rate-label">株式インデックス<br>（長期平均）</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-val">5〜8%</div>
+        <div class="rate-label">バランス型<br>投資信託</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-val">7〜10%</div>
+        <div class="rate-label">株式中心の<br>アクティブ運用</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-val">10%+</div>
+        <div class="rate-label">高リスク資産<br>（仮想通貨等）</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- よくある質問 -->
+  <div class="section">
+    <div class="section-label">FAQ</div>
+    <div class="section-title">よくある質問</div>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div>
+          <h4>Q. 複利はどのように計算されていますか？</h4>
+          <p>全モードで <strong>月次複利</strong> を採用しています。年利を12で割った月利を使い、毎月末に利息が元本に加算されます。例えば年利5%の場合、月利は約0.4167%（5÷12）として計算されます。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div>
+          <h4>Q. 課税ありを選ぶとどう変わりますか？</h4>
+          <p>毎月発生する利息に対して源泉徴収税率20.315%が控除された後の金額で次月の計算が行われます。長期運用では非課税と比べて最終運用額に大きな差が生じることがあります。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div>
+          <h4>Q. 金額の入力単位はなぜ千円ですか？</h4>
+          <p>大きな金額を入力する際の桁数ミスを防ぐためです。100万円なら「1000」、2000万円なら「20000」と入力します。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div>
+          <h4>Q. 逆算モードの「初期投入額を逆算」は積立なしですか？</h4>
+          <p>はい。積立なしの一括投資を想定し、目標金額・期間・年利から今すぐ投入すべき金額を計算します。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  資産運用シミュレーター — 操作マニュアル<br>
+  本ツールは試算目的であり、投資助言を行うものではありません。
+</div>
+
+</body>
+</html>

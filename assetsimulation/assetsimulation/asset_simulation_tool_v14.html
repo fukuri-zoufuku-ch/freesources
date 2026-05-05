@@ -1,0 +1,884 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#app{padding:1.5rem 1rem;font-family:var(--font-sans);font-size:15px;max-width:720px;margin:0 auto}
+.screen{display:none}.screen.active{display:block}
+.hero-header{background:#0F6E56;border-radius:var(--border-radius-lg);padding:1.75rem 1.5rem;margin-bottom:1.5rem}
+.hero-header h1{font-size:22px;font-weight:500;color:#9FE1CB;margin-bottom:6px}
+.hero-header p{font-size:15px;color:#5DCAA5}
+.mode-list{display:flex;flex-direction:column;gap:12px}
+.mode-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;cursor:pointer;text-align:left;transition:border-color 0.15s,background 0.15s;position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;width:100%}
+.mode-card:hover{background:var(--color-background-secondary)}
+.mode-card.green:hover{border-color:#1D9E75}.mode-card.blue:hover{border-color:#185FA5}.mode-card.purple:hover{border-color:#534AB7}.mode-card.coral:hover{border-color:#C04B20}
+.accent-bar{position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.mc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mc-body{flex:1;min-width:0}
+.mc-label{font-size:16px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.mc-desc{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.mc-arrow{color:var(--color-text-secondary);font-size:18px;flex-shrink:0}
+.back-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--color-text-secondary);padding:0;display:flex;align-items:center;gap:5px;margin-bottom:1.25rem}
+.back-btn:hover{color:var(--color-text-primary)}
+.sim-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sim-header-left{display:flex;align-items:center;gap:10px}
+.sim-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.sim-header-text{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.reset-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-secondary);font-size:13px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.reset-btn:hover{background:#FAECE7;border-color:#D85A30;color:#7A3010}
+.reset-btn svg{width:13px;height:13px}
+.field-group{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.1rem}
+.field-group.three{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:13px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-wrap input{width:100%;padding:10px 44px 10px 12px;font-size:16px;font-family:var(--font-sans);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);transition:border-color 0.15s}
+.input-wrap .unit{position:absolute;right:11px;font-size:13px;color:var(--color-text-secondary);pointer-events:none}
+.plain-input{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font-sans);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);transition:border-color 0.15s}
+.fi-green input:focus,.fi-green .plain-input:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
+.fi-blue input:focus,.fi-blue .plain-input:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,0.1)}
+.fi-purple input:focus,.fi-purple .plain-input:focus{outline:none;border-color:#534AB7;box-shadow:0 0 0 3px rgba(83,74,183,0.1)}
+.fi-coral input:focus,.fi-coral .plain-input:focus{outline:none;border-color:#C04B20;box-shadow:0 0 0 3px rgba(192,75,32,0.1)}
+.tax-row{display:flex;align-items:center;justify-content:space-between;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;margin-bottom:1.1rem;border:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;gap:10px}
+.tax-row-left{display:flex;flex-direction:column;gap:3px}
+.tax-label{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.tax-sub{font-size:12px;color:var(--color-text-secondary)}
+.tax-toggle-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.tax-option{font-size:13px;color:var(--color-text-secondary);cursor:pointer;padding:5px 12px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);transition:all 0.15s;white-space:nowrap}
+.tax-option.active-nisa{background:#E1F5EE;border-color:#5DCAA5;color:#085041;font-weight:500}
+.tax-option.active-tax{background:#FAECE7;border-color:#D85A30;color:#7A3010;font-weight:500}
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.run-btn{display:flex;align-items:center;gap:8px;padding:12px 22px;border:none;border-radius:var(--border-radius-md);font-size:15px;font-weight:500;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
+.run-btn:hover{opacity:0.88}.run-btn:active{transform:scale(0.98)}
+.run-btn.green{background:#0F6E56;color:#E1F5EE}
+.run-btn.blue{background:#185FA5;color:#E6F1FB}
+.run-btn.purple{background:#534AB7;color:#EEEDFE}
+.run-btn.coral{background:#C04B20;color:#FDF0EA}
+.run-btn svg{width:15px;height:15px}
+.cmp-btn{display:flex;align-items:center;gap:7px;padding:12px 18px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);transition:background 0.15s}
+.cmp-btn:hover{background:var(--color-background-secondary)}
+.cmp-btn svg{width:14px;height:14px}
+.err{color:#993C1D;font-size:13px;margin-top:8px;padding:9px 12px;background:#FAECE7;border-radius:var(--border-radius-md);display:none}
+.err.show{display:block}
+.rl{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+.metrics-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+.mcard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.mcard .ml{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px}
+.mcard .mv{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.mcard .mv.green{color:#0F6E56}
+.mcard .mv.yield{font-size:20px}
+.mcard.ag{background:#E1F5EE;border:0.5px solid #5DCAA5}.mcard.ag .ml{color:#085041}.mcard.ag .mv{color:#085041}
+.mcard.ab{background:#E6F1FB;border:0.5px solid #85B7EB}.mcard.ab .ml{color:#0C447C}.mcard.ab .mv{color:#0C447C}
+.mcard.ap{background:#EEEDFE;border:0.5px solid #AFA9EC}.mcard.ap .ml{color:#3C3489}.mcard.ap .mv{color:#3C3489}
+.mcard.tax-mcard{background:#FAECE7;border:0.5px solid #E8A88A}.mcard.tax-mcard .ml{color:#7A3010}.mcard.tax-mcard .mv{color:#7A3010}
+.yield-green{color:#0F6E56}.yield-blue{color:#185FA5}.yield-purple{color:#534AB7}.yield-coral{color:#C04B20}
+.tax-badge{display:inline-flex;align-items:center;font-size:11px;background:#FAECE7;color:#7A3010;border-radius:4px;padding:2px 7px;margin-left:8px;font-weight:500}
+.chart-outer{margin-top:4px}
+.chart-wrap{position:relative;width:100%;height:260px}
+.sep{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.35rem 0}
+.evt-block{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;margin-bottom:10px;border:0.5px solid var(--color-border-tertiary)}
+.evt-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.evt-badge-el{font-size:13px;font-weight:500;padding:3px 10px;border-radius:4px}
+.evt-badge-el.blue{color:#185FA5;background:#E6F1FB}
+.evt-badge-el.purple{color:#534AB7;background:#EEEDFE}
+.evt-del{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:20px;line-height:1;padding:0 2px}
+.evt-del:hover{color:#993C1D}
+.evt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.add-evt{width:100%;padding:11px;background:none;border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;font-size:14px;color:var(--color-text-secondary);margin-bottom:1rem;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-evt.blue:hover{border-color:#185FA5;color:#185FA5}
+.add-evt.purple:hover{border-color:#534AB7;color:#534AB7}
+.legend-row{display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-secondary)}
+.leg-sq{width:18px;height:3px;border-radius:2px}
+.phase-info{margin-top:10px;font-size:12px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.phase-row{display:flex;gap:6px;align-items:baseline;margin-bottom:2px}
+.phase-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tbl-section{margin-top:1.5rem}
+.tbl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tbl-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.06em}
+.tbl-toggle{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 12px;font-size:13px;cursor:pointer;color:var(--color-text-secondary)}
+.tbl-toggle:hover{background:var(--color-background-secondary)}
+.tbl-wrap{max-height:320px;overflow-y:auto;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
+.tbl-wrap table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl-wrap thead{position:sticky;top:0;z-index:1}
+.tbl-wrap thead th{padding:9px 12px;text-align:right;font-size:12px;font-weight:500;white-space:nowrap;border-bottom:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.tbl-wrap thead th:first-child{text-align:left}
+.tbl-wrap tbody tr{border-bottom:0.5px solid var(--color-border-tertiary);transition:background 0.1s}
+.tbl-wrap tbody tr:last-child{border-bottom:none}
+.tbl-wrap tbody tr:hover{background:var(--color-background-secondary)}
+.tbl-wrap tbody tr.evt-row{background:rgba(216,90,48,0.06)}
+.tbl-wrap tbody td{padding:8px 12px;text-align:right;color:var(--color-text-primary);white-space:nowrap}
+.tbl-wrap tbody td:first-child{text-align:left;color:var(--color-text-secondary)}
+.tbl-wrap tbody td.pos{color:#0F6E56}
+.evt-tag{font-size:11px;background:#FAECE7;color:#993C1D;border-radius:3px;padding:1px 5px;margin-left:4px}
+.cmp-panel{margin-top:1.5rem;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);overflow:hidden}
+.cmp-panel-header{padding:14px 18px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;background:var(--color-background-secondary)}
+.cmp-panel-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.cmp-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--color-text-secondary);line-height:1}
+.cmp-close:hover{color:#993C1D}
+.cmp-body{padding:16px 18px;background:var(--color-background-primary)}
+.cmp-base{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;margin-bottom:14px;border:0.5px solid var(--color-border-tertiary)}
+.cmp-base-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cmp-base-label{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.cmp-base-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.cmp-scenarios{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.cmp-scenario{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;border:0.5px solid var(--color-border-tertiary)}
+.cmp-scenario-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cmp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cmp-scenario-label{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1}
+.cmp-del{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:18px;line-height:1}
+.cmp-del:hover{color:#993C1D}
+.cmp-fields{display:grid;gap:8px}
+.cmp-fields.three{grid-template-columns:1fr 1fr 1fr}
+.cmp-field{display:flex;flex-direction:column;gap:5px}
+.cmp-field label{font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.cmp-field input{width:100%;padding:8px 10px;font-size:14px;font-family:var(--font-sans);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.cmp-field input:focus{outline:none;border-color:#888}
+.cmp-iw{position:relative;display:flex;align-items:center}
+.cmp-iw input{width:100%;padding:8px 32px 8px 10px;font-size:14px;font-family:var(--font-sans);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.cmp-iw input:focus{outline:none;border-color:#888}
+.cmp-iw .u{position:absolute;right:8px;font-size:11px;color:var(--color-text-secondary);pointer-events:none}
+.add-cmp-btn{width:100%;padding:10px;background:none;border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;font-size:13px;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
+.add-cmp-btn:hover{border-color:#888;color:var(--color-text-primary)}
+.cmp-run-btn{display:flex;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+.cmp-run-btn:hover{opacity:0.88}
+.cmp-run-btn.green{background:#0F6E56;color:#E1F5EE}
+.cmp-run-btn.blue{background:#185FA5;color:#E6F1FB}
+.cmp-run-btn.purple{background:#534AB7;color:#EEEDFE}
+.cmp-chart-wrap{position:relative;width:100%;height:280px;margin-top:14px}
+.cmp-result-grid{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.cmp-result-card{border-radius:var(--border-radius-md);padding:12px 14px;border:0.5px solid var(--color-border-tertiary)}
+.cr-label{font-size:12px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cr-stat{display:flex;flex-direction:column;gap:2px}
+.cr-key{font-size:11px;color:var(--color-text-secondary)}
+.cr-val{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.cr-val.green{color:#0F6E56}
+.rev-mode-tabs{display:flex;gap:6px;margin-bottom:1.25rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:5px}
+.rev-tab{flex:1;padding:9px 6px;border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;background:none;color:var(--color-text-secondary);transition:all 0.15s;text-align:center;line-height:1.3}
+.rev-tab.active{background:#C04B20;color:#FDF0EA}
+.rev-section{display:none}.rev-section.active{display:block}
+.rev-result-hero{background:linear-gradient(135deg,#C04B20,#E8752A);border-radius:var(--border-radius-lg);padding:1.5rem;margin-bottom:1.25rem;text-align:center}
+.rh-label{font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:8px}
+.rh-val{font-size:32px;font-weight:500;color:#fff;margin-bottom:4px}
+.rh-sub{font-size:13px;color:rgba(255,255,255,0.75)}
+.rev-answer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.rev-acard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;border:0.5px solid var(--color-border-tertiary)}
+.rev-acard .ral{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.rev-acard .rav{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.rev-note{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:1.25rem;line-height:1.6;border-left:3px solid #C04B20}
+</style>
+
+<div id="app">
+<div id="home" class="screen active">
+  <div class="hero-header">
+    <h1>資産運用シミュレーター</h1>
+    <p>将来の資産推移を複利計算でシミュレーションします</p>
+  </div>
+  <div class="mode-list">
+    <button class="mode-card green" onclick="go('sim-a')">
+      <div class="accent-bar" style="background:#1D9E75"></div>
+      <div class="mc-icon" style="background:#E1F5EE"><svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#0F6E56" stroke-width="1.5"><polyline points="2,13 6,8 9,10 13,5 16,7"/><line x1="2" y1="16" x2="16" y2="16"/></svg></div>
+      <div class="mc-body"><div class="mc-label">積立シミュレーション</div><div class="mc-desc">毎月一定額を積み立て、複利運用した場合の将来資産を計算します</div></div>
+      <div class="mc-arrow">›</div>
+    </button>
+    <button class="mode-card blue" onclick="go('sim-b')">
+      <div class="accent-bar" style="background:#185FA5"></div>
+      <div class="mc-icon" style="background:#E6F1FB"><svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#185FA5" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><line x1="9" y1="5" x2="9" y2="9"/><line x1="9" y1="9" x2="12" y2="11"/></svg></div>
+      <div class="mc-body"><div class="mc-label">複合シミュレーション</div><div class="mc-desc">利回り変更・追加投資・引き出しを含む複雑なシナリオに対応します</div></div>
+      <div class="mc-arrow">›</div>
+    </button>
+    <button class="mode-card purple" onclick="go('sim-c')">
+      <div class="accent-bar" style="background:#534AB7"></div>
+      <div class="mc-icon" style="background:#EEEDFE"><svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#534AB7" stroke-width="1.5"><polyline points="2,13 5,9 8,11 11,6 14,8 16,4"/><line x1="2" y1="16" x2="16" y2="16"/><circle cx="11" cy="6" r="1.5" fill="#534AB7"/></svg></div>
+      <div class="mc-body"><div class="mc-label">積立×複合シミュレーション</div><div class="mc-desc">毎月積立を継続しながら、途中で利回り変更・積立額の増額・減額ができます</div></div>
+      <div class="mc-arrow">›</div>
+    </button>
+    <button class="mode-card coral" onclick="go('sim-d')">
+      <div class="accent-bar" style="background:#C04B20"></div>
+      <div class="mc-icon" style="background:#FDF0EA"><svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="#C04B20" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><line x1="9" y1="5" x2="9" y2="13"/><line x1="5" y1="9" x2="13" y2="9"/></svg></div>
+      <div class="mc-body"><div class="mc-label">目標金額 逆算</div><div class="mc-desc">目標から「必要な月額積立」「初期投入額」「必要な運用年数」を逆算します</div></div>
+      <div class="mc-arrow">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- 積立 -->
+<div id="sim-a" class="screen fi-green">
+  <button class="back-btn" onclick="go('home')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,2 4,7 9,12"/></svg>ホームに戻る</button>
+  <div class="sim-header">
+    <div class="sim-header-left"><div class="sim-dot" style="background:#1D9E75"></div><div class="sim-header-text">積立シミュレーション</div></div>
+    <button class="reset-btn" onclick="resetA()"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7a5 5 0 1 0 1-3"/><polyline points="1,2 2,7 7,6"/></svg>リセット</button>
+  </div>
+  <div class="field-group">
+    <div class="field"><label>運用期間（月）</label><input class="plain-input" type="number" id="a-months" placeholder="240" min="1" step="1"></div>
+    <div class="field"><label>年利（%）</label><input class="plain-input" type="number" id="a-rate" placeholder="5.0" min="0" max="100" step="0.1"></div>
+    <div class="field full"><label>毎月の積立額（千円単位）</label><div class="input-wrap"><input type="number" id="a-monthly" placeholder="30　→ 3万円" min="0" step="1"><span class="unit">千円</span></div></div>
+  </div>
+  <div class="tax-row">
+    <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">毎月の利息に対する課税方式を選択</div></div>
+    <div class="tax-toggle-wrap">
+      <button class="tax-option active-nisa" id="a-tax-nisa" onclick="setTax('a','nisa')">非課税（NISA等）</button>
+      <button class="tax-option" id="a-tax-taxed" onclick="setTax('a','taxed')">課税（源泉20.315%）</button>
+    </div>
+  </div>
+  <div id="a-err" class="err"></div>
+  <div class="btn-row">
+    <button class="run-btn green" onclick="calcA()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>計算する</button>
+    <button class="cmp-btn" onclick="openCmp('a')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,10 5,4 8,7 11,2 13,4"/><polyline points="1,13 13,13"/></svg>シナリオ比較</button>
+  </div>
+  <div id="a-results" style="display:none">
+    <hr class="sep"><div class="rl" id="a-result-label">計算結果</div>
+    <div class="metrics-row">
+      <div class="mcard ag"><div class="ml">最終運用額</div><div class="mv" id="a-final"></div></div>
+      <div class="mcard"><div class="ml">元本合計</div><div class="mv" id="a-principal"></div></div>
+      <div class="mcard"><div class="ml">運用益（税引後）</div><div class="mv green" id="a-profit"></div></div>
+      <div class="mcard"><div class="ml">元本利回り</div><div class="mv yield yield-green" id="a-yield"></div></div>
+    </div>
+    <div id="a-tax-detail" style="display:none;margin-bottom:1rem"><div class="metrics-row" style="margin-bottom:0"><div class="mcard tax-mcard"><div class="ml">税引前運用益</div><div class="mv" id="a-gross-profit"></div></div><div class="mcard tax-mcard"><div class="ml">源泉税合計</div><div class="mv" id="a-tax-total"></div></div></div></div>
+    <div class="chart-outer">
+      <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#1D9E75"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#1D9E75" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本</span></div></div>
+      <div class="chart-wrap"><canvas id="chartA"></canvas></div>
+    </div>
+    <div class="tbl-section">
+      <div class="tbl-header"><span class="tbl-title">月次明細</span><button class="tbl-toggle" onclick="toggleTbl('a')">▲ 折りたたむ</button></div>
+      <div class="tbl-wrap" id="a-tbl-wrap"><table><thead><tr><th>月</th><th>積立累計</th><th>運用残高</th><th>運用益（税引後）</th><th>利益率</th></tr></thead><tbody id="a-tbl-body"></tbody></table></div>
+    </div>
+  </div>
+  <div id="a-cmp" class="cmp-panel" style="display:none;margin-top:1.5rem">
+    <div class="cmp-panel-header"><span class="cmp-panel-title">📊 シナリオ比較</span><button class="cmp-close" onclick="closeCmp('a')">×</button></div>
+    <div class="cmp-body">
+      <div class="cmp-base"><div class="cmp-base-header"><div class="cmp-dot" style="background:#1D9E75"></div><span class="cmp-base-label">ベース（現在の入力値）</span></div><div class="cmp-base-desc" id="a-cmp-base-desc">—</div></div>
+      <div class="cmp-scenarios" id="a-cmp-scenarios"></div>
+      <button class="add-cmp-btn" id="a-add-cmp-btn" onclick="addCmpScenario('a')"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>比較案を追加（最大3件）</button>
+      <div id="a-cmp-err" class="err"></div>
+      <button class="cmp-run-btn green" onclick="runCmp('a')"><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>比較する</button>
+      <div id="a-cmp-result" style="display:none"><div class="legend-row" style="margin-top:16px" id="a-cmp-legend"></div><div class="cmp-chart-wrap"><canvas id="cmpChartA"></canvas></div><div class="cmp-result-grid" id="a-cmp-cards"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 複合 -->
+<div id="sim-b" class="screen fi-blue">
+  <button class="back-btn" onclick="go('home')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,2 4,7 9,12"/></svg>ホームに戻る</button>
+  <div class="sim-header">
+    <div class="sim-header-left"><div class="sim-dot" style="background:#185FA5"></div><div class="sim-header-text">複合シミュレーション</div></div>
+    <button class="reset-btn" onclick="resetB()"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7a5 5 0 1 0 1-3"/><polyline points="1,2 2,7 7,6"/></svg>リセット</button>
+  </div>
+  <div class="field-group three">
+    <div class="field"><label>運用期間（月）</label><input class="plain-input" type="number" id="b-months" placeholder="120" min="1" step="1"></div>
+    <div class="field"><label>初期年利（%）</label><input class="plain-input" type="number" id="b-rate" placeholder="4.0" min="0" max="100" step="0.1"></div>
+    <div class="field"><label>初期投資額（千円単位）</label><div class="input-wrap"><input type="number" id="b-initial" placeholder="1000 → 100万円" min="0" step="1"><span class="unit">千円</span></div></div>
+  </div>
+  <div class="tax-row">
+    <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">毎月の利息に対する課税方式を選択</div></div>
+    <div class="tax-toggle-wrap">
+      <button class="tax-option active-nisa" id="b-tax-nisa" onclick="setTax('b','nisa')">非課税（NISA等）</button>
+      <button class="tax-option" id="b-tax-taxed" onclick="setTax('b','taxed')">課税（源泉20.315%）</button>
+    </div>
+  </div>
+  <hr class="sep">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">イベント設定</div><div style="font-size:13px;color:var(--color-text-secondary)">最大4件</div></div>
+  <div id="b-evt-container"></div>
+  <button class="add-evt blue" id="b-add-btn" onclick="addEvt('b')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>イベントを追加</button>
+  <div id="b-err" class="err"></div>
+  <div class="btn-row">
+    <button class="run-btn blue" onclick="calcB()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>計算する</button>
+    <button class="cmp-btn" onclick="openCmp('b')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,10 5,4 8,7 11,2 13,4"/><polyline points="1,13 13,13"/></svg>シナリオ比較</button>
+  </div>
+  <div id="b-results" style="display:none">
+    <hr class="sep"><div class="rl">計算結果</div>
+    <div class="metrics-row">
+      <div class="mcard ab"><div class="ml">最終運用額</div><div class="mv" id="b-final"></div></div>
+      <div class="mcard"><div class="ml">元本合計</div><div class="mv" id="b-principal"></div></div>
+      <div class="mcard"><div class="ml">運用益（税引後）</div><div class="mv green" id="b-profit"></div></div>
+      <div class="mcard"><div class="ml">元本利回り</div><div class="mv yield yield-blue" id="b-yield"></div></div>
+    </div>
+    <div id="b-tax-detail" style="display:none;margin-bottom:1rem"><div class="metrics-row" style="margin-bottom:0"><div class="mcard tax-mcard"><div class="ml">税引前運用益</div><div class="mv" id="b-gross-profit"></div></div><div class="mcard tax-mcard"><div class="ml">源泉税合計</div><div class="mv" id="b-tax-total"></div></div></div></div>
+    <div class="chart-outer">
+      <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#378ADD"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本</span></div><div class="leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#D85A30"></div>イベント発生月</div></div>
+      <div class="chart-wrap"><canvas id="chartB"></canvas></div>
+    </div>
+    <div class="tbl-section">
+      <div class="tbl-header"><span class="tbl-title">月次明細</span><button class="tbl-toggle" onclick="toggleTbl('b')">▲ 折りたたむ</button></div>
+      <div class="tbl-wrap" id="b-tbl-wrap"><table><thead><tr><th>月</th><th>投下元本累計</th><th>運用残高</th><th>運用益（税引後）</th><th>利益率</th></tr></thead><tbody id="b-tbl-body"></tbody></table></div>
+    </div>
+  </div>
+  <div id="b-cmp" class="cmp-panel" style="display:none;margin-top:1.5rem">
+    <div class="cmp-panel-header"><span class="cmp-panel-title">📊 シナリオ比較</span><button class="cmp-close" onclick="closeCmp('b')">×</button></div>
+    <div class="cmp-body">
+      <div class="cmp-base"><div class="cmp-base-header"><div class="cmp-dot" style="background:#185FA5"></div><span class="cmp-base-label">ベース（現在の入力値）</span></div><div class="cmp-base-desc" id="b-cmp-base-desc">—</div></div>
+      <div class="cmp-scenarios" id="b-cmp-scenarios"></div>
+      <button class="add-cmp-btn" id="b-add-cmp-btn" onclick="addCmpScenario('b')"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>比較案を追加（最大3件）</button>
+      <div id="b-cmp-err" class="err"></div>
+      <button class="cmp-run-btn blue" onclick="runCmp('b')"><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>比較する</button>
+      <div id="b-cmp-result" style="display:none"><div class="legend-row" style="margin-top:16px" id="b-cmp-legend"></div><div class="cmp-chart-wrap"><canvas id="cmpChartB"></canvas></div><div class="cmp-result-grid" id="b-cmp-cards"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 積立×複合 -->
+<div id="sim-c" class="screen fi-purple">
+  <button class="back-btn" onclick="go('home')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,2 4,7 9,12"/></svg>ホームに戻る</button>
+  <div class="sim-header">
+    <div class="sim-header-left"><div class="sim-dot" style="background:#534AB7"></div><div class="sim-header-text">積立×複合シミュレーション</div></div>
+    <button class="reset-btn" onclick="resetC()"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7a5 5 0 1 0 1-3"/><polyline points="1,2 2,7 7,6"/></svg>リセット</button>
+  </div>
+  <div class="field-group three">
+    <div class="field"><label>運用期間（月）</label><input class="plain-input" type="number" id="c-months" placeholder="240" min="1" step="1"></div>
+    <div class="field"><label>初期年利（%）</label><input class="plain-input" type="number" id="c-rate" placeholder="5.0" min="0" max="100" step="0.1"></div>
+    <div class="field"><label>初期積立額（千円単位）</label><div class="input-wrap"><input type="number" id="c-monthly" placeholder="30 → 3万円" min="0" step="1"><span class="unit">千円</span></div></div>
+  </div>
+  <div class="tax-row">
+    <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">毎月の利息に対する課税方式を選択</div></div>
+    <div class="tax-toggle-wrap">
+      <button class="tax-option active-nisa" id="c-tax-nisa" onclick="setTax('c','nisa')">非課税（NISA等）</button>
+      <button class="tax-option" id="c-tax-taxed" onclick="setTax('c','taxed')">課税（源泉20.315%）</button>
+    </div>
+  </div>
+  <hr class="sep">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">イベント設定</div><div style="font-size:13px;color:var(--color-text-secondary)">最大4件</div></div>
+  <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;line-height:1.5">指定した月から年利・積立額を変更できます。空欄は変更なしとして扱います。</div>
+  <div id="c-evt-container"></div>
+  <button class="add-evt purple" id="c-add-btn" onclick="addEvt('c')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>イベントを追加</button>
+  <div id="c-err" class="err"></div>
+  <div class="btn-row">
+    <button class="run-btn purple" onclick="calcC()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>計算する</button>
+    <button class="cmp-btn" onclick="openCmp('c')"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,10 5,4 8,7 11,2 13,4"/><polyline points="1,13 13,13"/></svg>シナリオ比較</button>
+  </div>
+  <div id="c-results" style="display:none">
+    <hr class="sep"><div class="rl">計算結果</div>
+    <div class="metrics-row">
+      <div class="mcard ap"><div class="ml">最終運用額</div><div class="mv" id="c-final"></div></div>
+      <div class="mcard"><div class="ml">元本合計</div><div class="mv" id="c-principal"></div></div>
+      <div class="mcard"><div class="ml">運用益（税引後）</div><div class="mv green" id="c-profit"></div></div>
+      <div class="mcard"><div class="ml">元本利回り</div><div class="mv yield yield-purple" id="c-yield"></div></div>
+    </div>
+    <div id="c-tax-detail" style="display:none;margin-bottom:1rem"><div class="metrics-row" style="margin-bottom:0"><div class="mcard tax-mcard"><div class="ml">税引前運用益</div><div class="mv" id="c-gross-profit"></div></div><div class="mcard tax-mcard"><div class="ml">源泉税合計</div><div class="mv" id="c-tax-total"></div></div></div></div>
+    <div class="chart-outer">
+      <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#7F77DD"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#7F77DD" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本</span></div><div class="leg-item"><div style="width:10px;height:10px;border-radius:50%;background:#D85A30"></div>変更イベント発生月</div></div>
+      <div class="chart-wrap"><canvas id="chartC"></canvas></div>
+    </div>
+    <div class="phase-info" id="c-phase-info"></div>
+    <div class="tbl-section">
+      <div class="tbl-header"><span class="tbl-title">月次明細</span><button class="tbl-toggle" onclick="toggleTbl('c')">▲ 折りたたむ</button></div>
+      <div class="tbl-wrap" id="c-tbl-wrap"><table><thead><tr><th>月</th><th>積立累計</th><th>運用残高</th><th>運用益（税引後）</th><th>利益率</th></tr></thead><tbody id="c-tbl-body"></tbody></table></div>
+    </div>
+  </div>
+  <div id="c-cmp" class="cmp-panel" style="display:none;margin-top:1.5rem">
+    <div class="cmp-panel-header"><span class="cmp-panel-title">📊 シナリオ比較</span><button class="cmp-close" onclick="closeCmp('c')">×</button></div>
+    <div class="cmp-body">
+      <div class="cmp-base"><div class="cmp-base-header"><div class="cmp-dot" style="background:#534AB7"></div><span class="cmp-base-label">ベース（現在の入力値）</span></div><div class="cmp-base-desc" id="c-cmp-base-desc">—</div></div>
+      <div class="cmp-scenarios" id="c-cmp-scenarios"></div>
+      <button class="add-cmp-btn" id="c-add-cmp-btn" onclick="addCmpScenario('c')"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>比較案を追加（最大3件）</button>
+      <div id="c-cmp-err" class="err"></div>
+      <button class="cmp-run-btn purple" onclick="runCmp('c')"><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>比較する</button>
+      <div id="c-cmp-result" style="display:none"><div class="legend-row" style="margin-top:16px" id="c-cmp-legend"></div><div class="cmp-chart-wrap"><canvas id="cmpChartC"></canvas></div><div class="cmp-result-grid" id="c-cmp-cards"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 逆算 -->
+<div id="sim-d" class="screen fi-coral">
+  <button class="back-btn" onclick="go('home')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9,2 4,7 9,12"/></svg>ホームに戻る</button>
+  <div class="sim-header">
+    <div class="sim-header-left"><div class="sim-dot" style="background:#C04B20"></div><div class="sim-header-text">目標金額 逆算</div></div>
+    <button class="reset-btn" onclick="resetD()"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7a5 5 0 1 0 1-3"/><polyline points="1,2 2,7 7,6"/></svg>リセット</button>
+  </div>
+  <div class="rev-mode-tabs">
+    <button class="rev-tab active" id="rtab-monthly" onclick="switchRevTab('monthly')">月額積立を逆算</button>
+    <button class="rev-tab" id="rtab-lumpsum" onclick="switchRevTab('lumpsum')">初期投入額を逆算</button>
+    <button class="rev-tab" id="rtab-period" onclick="switchRevTab('period')">必要期間を逆算</button>
+  </div>
+
+  <!-- 月額積立逆算 -->
+  <div class="rev-section active" id="rsec-monthly">
+    <div class="field-group three">
+      <div class="field"><label>目標金額（千円単位）</label><div class="input-wrap"><input type="number" id="d-goal-m" placeholder="20000 → 2,000万円" min="1" step="1"><span class="unit">千円</span></div></div>
+      <div class="field"><label>運用期間（月）</label><input class="plain-input" type="number" id="d-months-m" placeholder="240" min="1" step="1"></div>
+      <div class="field"><label>年利（%）</label><input class="plain-input" type="number" id="d-rate-m" placeholder="5.0" min="0.01" max="100" step="0.1"></div>
+    </div>
+    <div class="tax-row">
+      <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">利息に対する課税方式</div></div>
+      <div class="tax-toggle-wrap">
+        <button class="tax-option active-nisa" id="d-tax-nisa-m" onclick="setTax('d-m','nisa')">非課税（NISA等）</button>
+        <button class="tax-option" id="d-tax-taxed-m" onclick="setTax('d-m','taxed')">課税（源泉20.315%）</button>
+      </div>
+    </div>
+    <div id="d-err-m" class="err"></div>
+    <button class="run-btn coral" onclick="calcRevMonthly()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>逆算する</button>
+    <div id="d-results-m" style="display:none">
+      <hr class="sep">
+      <div class="rev-result-hero"><div class="rh-label">必要な月額積立</div><div class="rh-val" id="d-ans-monthly"></div><div class="rh-sub" id="d-ans-monthly-sub"></div></div>
+      <div class="rev-answer-grid">
+        <div class="rev-acard"><div class="ral">達成時の運用額</div><div class="rav" id="d-m-goal"></div></div>
+        <div class="rev-acard"><div class="ral">元本合計</div><div class="rav" id="d-m-principal"></div></div>
+        <div class="rev-acard"><div class="ral">運用益（税引後）</div><div class="rav" style="color:#0F6E56" id="d-m-profit"></div></div>
+      </div>
+      <div class="rev-note" id="d-m-note"></div>
+      <div class="chart-outer">
+        <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#C04B20"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#C04B20" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本</span></div></div>
+        <div class="chart-wrap"><canvas id="chartDm"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 初期投入額逆算 -->
+  <div class="rev-section" id="rsec-lumpsum">
+    <div style="font-size:13px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1rem;line-height:1.6">積立なしの一括投資で目標金額に到達するために、今すぐ投入すべき初期金額を逆算します。</div>
+    <div class="field-group three">
+      <div class="field"><label>目標金額（千円単位）</label><div class="input-wrap"><input type="number" id="d-goal-l" placeholder="20000 → 2,000万円" min="1" step="1"><span class="unit">千円</span></div></div>
+      <div class="field"><label>運用期間（月）</label><input class="plain-input" type="number" id="d-months-l" placeholder="240" min="1" step="1"></div>
+      <div class="field"><label>年利（%）</label><input class="plain-input" type="number" id="d-rate-l" placeholder="5.0" min="0.01" max="100" step="0.1"></div>
+    </div>
+    <div class="tax-row">
+      <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">利息に対する課税方式</div></div>
+      <div class="tax-toggle-wrap">
+        <button class="tax-option active-nisa" id="d-tax-nisa-l" onclick="setTax('d-l','nisa')">非課税（NISA等）</button>
+        <button class="tax-option" id="d-tax-taxed-l" onclick="setTax('d-l','taxed')">課税（源泉20.315%）</button>
+      </div>
+    </div>
+    <div id="d-err-l" class="err"></div>
+    <button class="run-btn coral" onclick="calcRevLumpsum()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>逆算する</button>
+    <div id="d-results-l" style="display:none">
+      <hr class="sep">
+      <div class="rev-result-hero"><div class="rh-label">必要な初期投入額</div><div class="rh-val" id="d-ans-lumpsum"></div><div class="rh-sub" id="d-ans-lumpsum-sub"></div></div>
+      <div class="rev-answer-grid">
+        <div class="rev-acard"><div class="ral">達成時の運用額</div><div class="rav" id="d-l-goal"></div></div>
+        <div class="rev-acard"><div class="ral">運用益（税引後）</div><div class="rav" style="color:#0F6E56" id="d-l-profit"></div></div>
+        <div class="rev-acard"><div class="ral">元本利回り</div><div class="rav" style="color:#C04B20;font-size:20px;font-weight:500" id="d-l-yield"></div></div>
+      </div>
+      <div class="rev-note" id="d-l-note"></div>
+      <div class="chart-outer">
+        <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#C04B20"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#C04B20" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本（初期投入額）</span></div></div>
+        <div class="chart-wrap"><canvas id="chartDl"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 必要期間逆算 -->
+  <div class="rev-section" id="rsec-period">
+    <div class="field-group three">
+      <div class="field"><label>目標金額（千円単位）</label><div class="input-wrap"><input type="number" id="d-goal-p" placeholder="20000 → 2,000万円" min="1" step="1"><span class="unit">千円</span></div></div>
+      <div class="field"><label>月額積立（千円単位）</label><div class="input-wrap"><input type="number" id="d-monthly-p" placeholder="30 → 3万円" min="1" step="1"><span class="unit">千円</span></div></div>
+      <div class="field"><label>年利（%）</label><input class="plain-input" type="number" id="d-rate-p" placeholder="5.0" min="0.01" max="100" step="0.1"></div>
+    </div>
+    <div class="tax-row">
+      <div class="tax-row-left"><div class="tax-label">課税設定</div><div class="tax-sub">利息に対する課税方式</div></div>
+      <div class="tax-toggle-wrap">
+        <button class="tax-option active-nisa" id="d-tax-nisa-p" onclick="setTax('d-p','nisa')">非課税（NISA等）</button>
+        <button class="tax-option" id="d-tax-taxed-p" onclick="setTax('d-p','taxed')">課税（源泉20.315%）</button>
+      </div>
+    </div>
+    <div id="d-err-p" class="err"></div>
+    <button class="run-btn coral" onclick="calcRevPeriod()"><svg viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,7.5 3,13"/></svg>逆算する</button>
+    <div id="d-results-p" style="display:none">
+      <hr class="sep">
+      <div class="rev-result-hero"><div class="rh-label">必要な運用期間</div><div class="rh-val" id="d-ans-period"></div><div class="rh-sub" id="d-ans-period-sub"></div></div>
+      <div class="rev-answer-grid">
+        <div class="rev-acard"><div class="ral">達成時の運用額</div><div class="rav" id="d-p-goal"></div></div>
+        <div class="rev-acard"><div class="ral">元本合計</div><div class="rav" id="d-p-principal"></div></div>
+        <div class="rev-acard"><div class="ral">運用益（税引後）</div><div class="rav" style="color:#0F6E56" id="d-p-profit"></div></div>
+      </div>
+      <div class="rev-note" id="d-p-note"></div>
+      <div class="chart-outer">
+        <div class="legend-row"><div class="leg-item"><div class="leg-sq" style="background:#C04B20"></div>運用残高</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#C04B20" stroke-width="1.5" stroke-dasharray="5,3"/></svg><span>元本</span></div></div>
+        <div class="chart-wrap"><canvas id="chartDp"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TAX_RATE=0.20315;
+const taxMode={a:'nisa',b:'nisa',c:'nisa','d-m':'nisa','d-l':'nisa','d-p':'nisa'};
+let cA=null,cB=null,cC=null,cDm=null,cDl=null,cDp=null;
+let cmpCharts={a:null,b:null,c:null};
+let evtsB=[],evtsC=[],eidB=0,eidC=0;
+const tblOpen={a:true,b:true,c:true};
+const cmpScenarios={a:[],b:[],c:[]};
+let cmpEid={a:0,b:0,c:0};
+const CMP_COLORS=['#D85A30','#BA7517','#6B3FA0'];
+const BASE_COLORS={a:'#1D9E75',b:'#378ADD',c:'#7F77DD'};
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='home'){evtsB=[];evtsC=[];eidB=0;eidC=0;renderEvts('b');renderEvts('c');}
+}
+
+/* ── リセット関数 ── */
+function clearInputs(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});}
+function hideResults(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});}
+function clearErrAll(ids){ids.forEach(id=>clearErr(id));}
+function destroyChart(c){if(c){c.destroy();return null;}return null;}
+
+function resetA(){
+  if(!confirm('入力値と結果をリセットしますか？'))return;
+  clearInputs(['a-months','a-rate','a-monthly']);
+  setTax('a','nisa');
+  clearErrAll(['a-err','a-cmp-err']);
+  hideResults(['a-results','a-cmp']);
+  cA=destroyChart(cA);
+  if(cmpCharts.a){cmpCharts.a.destroy();cmpCharts.a=null;}
+  cmpScenarios.a=[];cmpEid.a=0;
+  document.getElementById('a-cmp-scenarios').innerHTML='';
+  document.getElementById('a-add-cmp-btn').style.display='';
+  document.getElementById('a-cmp-result').style.display='none';
+  tblOpen.a=true;
+}
+
+function resetB(){
+  if(!confirm('入力値・イベント・結果をすべてリセットしますか？'))return;
+  clearInputs(['b-months','b-rate','b-initial']);
+  setTax('b','nisa');
+  clearErrAll(['b-err','b-cmp-err']);
+  hideResults(['b-results','b-cmp']);
+  cB=destroyChart(cB);
+  if(cmpCharts.b){cmpCharts.b.destroy();cmpCharts.b=null;}
+  cmpScenarios.b=[];cmpEid.b=0;
+  document.getElementById('b-cmp-scenarios').innerHTML='';
+  document.getElementById('b-add-cmp-btn').style.display='';
+  document.getElementById('b-cmp-result').style.display='none';
+  evtsB=[];eidB=0;renderEvts('b');
+  document.getElementById('b-add-btn').style.display='';
+  tblOpen.b=true;
+}
+
+function resetC(){
+  if(!confirm('入力値・イベント・結果をすべてリセットしますか？'))return;
+  clearInputs(['c-months','c-rate','c-monthly']);
+  setTax('c','nisa');
+  clearErrAll(['c-err','c-cmp-err']);
+  hideResults(['c-results','c-cmp']);
+  cC=destroyChart(cC);
+  if(cmpCharts.c){cmpCharts.c.destroy();cmpCharts.c=null;}
+  cmpScenarios.c=[];cmpEid.c=0;
+  document.getElementById('c-cmp-scenarios').innerHTML='';
+  document.getElementById('c-add-cmp-btn').style.display='';
+  document.getElementById('c-cmp-result').style.display='none';
+  evtsC=[];eidC=0;renderEvts('c');
+  document.getElementById('c-add-btn').style.display='';
+  tblOpen.c=true;
+}
+
+function resetD(){
+  if(!confirm('逆算画面の入力値と結果をすべてリセットしますか？'))return;
+  // 月額積立タブ
+  clearInputs(['d-goal-m','d-months-m','d-rate-m']);
+  setTax('d-m','nisa');
+  clearErr('d-err-m');
+  document.getElementById('d-results-m').style.display='none';
+  cDm=destroyChart(cDm);
+  // 初期投入額タブ
+  clearInputs(['d-goal-l','d-months-l','d-rate-l']);
+  setTax('d-l','nisa');
+  clearErr('d-err-l');
+  document.getElementById('d-results-l').style.display='none';
+  cDl=destroyChart(cDl);
+  // 必要期間タブ
+  clearInputs(['d-goal-p','d-monthly-p','d-rate-p']);
+  setTax('d-p','nisa');
+  clearErr('d-err-p');
+  document.getElementById('d-results-p').style.display='none';
+  cDp=destroyChart(cDp);
+  // タブを月額積立に戻す
+  switchRevTab('monthly');
+}
+
+/* ── 課税トグル ── */
+function setTax(mode,type){
+  taxMode[mode]=type;
+  const parts=mode.split('-');
+  const sfx=parts.length>1?'-'+parts[parts.length-1]:'';
+  const base=parts[0];
+  document.getElementById(base+'-tax-nisa'+sfx).className='tax-option'+(type==='nisa'?' active-nisa':'');
+  document.getElementById(base+'-tax-taxed'+sfx).className='tax-option'+(type==='taxed'?' active-tax':'');
+}
+function isTaxed(mode){return taxMode[mode]==='taxed';}
+function netInterest(gross,taxed){return taxed?gross*(1-TAX_RATE):gross;}
+
+function jpy(n){
+  const a=Math.abs(n),s=n<0?'-':'';
+  if(a>=1e8)return s+(a/1e8).toFixed(1).replace(/\.0$/,'')+'億円';
+  if(a>=1e4)return s+Math.round(a/1e4).toLocaleString('ja-JP')+'万円';
+  return s+Math.round(a).toLocaleString('ja-JP')+'円';
+}
+function jpyFull(n){const a=Math.abs(n),s=n<0?'-':'';return s+Math.round(a).toLocaleString('ja-JP')+'円';}
+function getK(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?NaN:Math.round(v)*1000;}
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show');}
+function clearErr(id){const el=document.getElementById(id);if(el)el.classList.remove('show');}
+function taxBadge(taxed){return taxed?'<span class="tax-badge">課税 20.315%</span>':'<span class="tax-badge" style="background:#E1F5EE;color:#085041">非課税</span>';}
+function showTaxDetail(mode,gross,tax,show){
+  document.getElementById(mode+'-tax-detail').style.display=show?'block':'none';
+  if(show){document.getElementById(mode+'-gross-profit').textContent='+'+jpy(gross);document.getElementById(mode+'-tax-total').textContent='-'+jpy(tax);}
+}
+function periodStr(months){const y=Math.floor(months/12),m=months%12;return y>0?(m>0?`${y}年${m}ヶ月`:`${y}年`):`${months}ヶ月`;}
+
+/* ── シミュレーション ── */
+function simA(months,ar,mYen,taxed){
+  const mr=(ar/12)/100;let bal=0,gp=0,tt=0,rows=[];
+  for(let i=1;i<=months;i++){const int=bal*mr,ni=netInterest(int,taxed),tx=int-ni;tt+=tx;gp+=int;bal=bal+ni+mYen;const pr=mYen*i,pf=bal-pr;rows.push({month:i,principal:Math.round(pr),balance:Math.round(bal),profit:Math.round(pf),rate:pr>0?pf/pr*100:0,evt:false});}
+  return{rows,grossProfit:Math.round(gp),taxTotal:Math.round(tt)};
+}
+function simB(months,ar,initYen,evtList,taxed){
+  let bal=initYen,mr=(ar/12)/100,cum=initYen,gp=0,tt=0,rows=[];
+  const em={};evtList.forEach(e=>{em[e.month]=e;});
+  for(let m=1;m<=months;m++){
+    const ev=em[m];let lbl='';
+    if(ev){if(ev.newRate!==null){mr=(ev.newRate/12)/100;lbl+='年利→'+ev.newRate+'%';}if(ev.add){bal+=ev.add;cum+=ev.add;lbl+=(lbl?' ':'')+'追加+'+jpy(ev.add);}if(ev.wd){const w=Math.min(bal,ev.wd);bal-=w;cum-=w;lbl+=(lbl?' ':'')+'引出-'+jpy(w);}}
+    const int=bal*mr,ni=netInterest(int,taxed),tx=int-ni;tt+=tx;gp+=int;bal=bal+ni;const pf=bal-cum;
+    rows.push({month:m,principal:Math.round(cum),balance:Math.round(bal),profit:Math.round(pf),rate:cum>0?pf/cum*100:0,evt:lbl||false});
+  }
+  return{rows,grossProfit:Math.round(gp),taxTotal:Math.round(tt)};
+}
+function simC(months,ar,initM,evtList,taxed){
+  let bal=0,mr=(ar/12)/100,monthly=initM,cum=0,gp=0,tt=0,rows=[];
+  const em={};evtList.forEach(e=>{em[e.month]=e;});
+  const phases=[{from:1,rate:ar,monthly:initM}];
+  for(let m=1;m<=months;m++){
+    const ev=em[m];let lbl='',changed=false;
+    if(ev){if(ev.newRate!==null){mr=(ev.newRate/12)/100;ar=ev.newRate;lbl+='年利→'+ar+'%';changed=true;}if(ev.newMonthly!==null){monthly=ev.newMonthly;lbl+=(lbl?' ':'')+'積立→'+jpy(monthly)+'/月';changed=true;}if(changed)phases.push({from:m,rate:ar,monthly});}
+    const int=bal*mr,ni=netInterest(int,taxed),tx=int-ni;tt+=tx;gp+=int;cum+=monthly;bal=bal+ni+monthly;const pf=bal-cum;
+    rows.push({month:m,principal:Math.round(cum),balance:Math.round(bal),profit:Math.round(pf),rate:cum>0?pf/cum*100:0,evt:lbl||false});
+  }
+  return{rows,phases,grossProfit:Math.round(gp),taxTotal:Math.round(tt)};
+}
+
+/* ── 逆算 ── */
+function switchRevTab(tab){
+  ['monthly','lumpsum','period'].forEach(t=>{
+    document.getElementById('rtab-'+t).className='rev-tab'+(t===tab?' active':'');
+    document.getElementById('rsec-'+t).className='rev-section'+(t===tab?' active':'');
+  });
+}
+function calcRevMonthly(){
+  clearErr('d-err-m');
+  const goal=getK('d-goal-m'),months=parseInt(document.getElementById('d-months-m').value),rate=parseFloat(document.getElementById('d-rate-m').value),taxed=isTaxed('d-m');
+  if(isNaN(goal)||goal<=0){showErr('d-err-m','目標金額を千円単位で入力してください');return;}
+  if(!months||months<1||isNaN(months)){showErr('d-err-m','運用期間は1以上の整数で入力してください');return;}
+  if(isNaN(rate)||rate<=0||rate>100){showErr('d-err-m','年利は0より大きい値で入力してください');return;}
+  const mr=(rate/12)/100,effMr=taxed?mr*(1-TAX_RATE):mr;
+  let monthly=effMr===0?goal/months:goal*effMr/(Math.pow(1+effMr,months)-1);
+  monthly=Math.ceil(monthly);
+  const {rows}=simA(months,rate,monthly,taxed);const last=rows[rows.length-1];
+  const principal=monthly*months,profit=last.balance-principal,ps=periodStr(months);
+  document.getElementById('d-ans-monthly').textContent=jpy(monthly)+'/月';
+  document.getElementById('d-ans-monthly-sub').textContent=`${ps}で目標 ${jpy(goal)} 達成`;
+  document.getElementById('d-m-goal').textContent=jpy(last.balance);document.getElementById('d-m-principal').textContent=jpy(principal);document.getElementById('d-m-profit').textContent='+'+jpy(profit);
+  document.getElementById('d-m-note').innerHTML=`<strong>計算条件：</strong>年利 ${rate}%・期間 ${ps}・${taxed?'課税（源泉20.315%）':'非課税（NISA等）'}<br>毎月 <strong>${jpy(monthly)}</strong> を積み立てると、${ps}後に <strong>${jpy(last.balance)}</strong> になります。（元本 ${jpy(principal)} ＋ 運用益 ${jpy(profit)}）`;
+  document.getElementById('d-results-m').style.display='block';
+  if(cDm)cDm.destroy();cDm=drawRevChart('chartDm',rows);
+}
+function calcRevLumpsum(){
+  clearErr('d-err-l');
+  const goal=getK('d-goal-l'),months=parseInt(document.getElementById('d-months-l').value),rate=parseFloat(document.getElementById('d-rate-l').value),taxed=isTaxed('d-l');
+  if(isNaN(goal)||goal<=0){showErr('d-err-l','目標金額を千円単位で入力してください');return;}
+  if(!months||months<1||isNaN(months)){showErr('d-err-l','運用期間は1以上の整数で入力してください');return;}
+  if(isNaN(rate)||rate<=0||rate>100){showErr('d-err-l','年利は0より大きい値で入力してください');return;}
+  const mr=(rate/12)/100,effMr=taxed?mr*(1-TAX_RATE):mr;
+  const lumpsum=Math.ceil(goal/Math.pow(1+effMr,months));
+  let bal=lumpsum;const rows=[];
+  for(let m=1;m<=months;m++){const int=bal*mr,ni=netInterest(int,taxed);bal=bal+ni;const pf=bal-lumpsum;rows.push({month:m,principal:lumpsum,balance:Math.round(bal),profit:Math.round(pf),rate:pf/lumpsum*100,evt:false});}
+  const last=rows[rows.length-1],profit=last.balance-lumpsum,yieldPct=(profit/lumpsum*100).toFixed(1),ps=periodStr(months);
+  document.getElementById('d-ans-lumpsum').textContent=jpy(lumpsum);
+  document.getElementById('d-ans-lumpsum-sub').textContent=`今すぐ投入で${ps}後に目標 ${jpy(goal)} 達成`;
+  document.getElementById('d-l-goal').textContent=jpy(last.balance);document.getElementById('d-l-profit').textContent='+'+jpy(profit);document.getElementById('d-l-yield').textContent=yieldPct+'%';
+  document.getElementById('d-l-note').innerHTML=`<strong>計算条件：</strong>年利 ${rate}%・期間 ${ps}・${taxed?'課税（源泉20.315%）':'非課税（NISA等）'}<br>今すぐ <strong>${jpy(lumpsum)}</strong> を一括投入すると、${ps}後に <strong>${jpy(last.balance)}</strong> になります。（元本 ${jpy(lumpsum)} ＋ 運用益 ${jpy(profit)}、利回り ${yieldPct}%）`;
+  document.getElementById('d-results-l').style.display='block';
+  if(cDl)cDl.destroy();cDl=drawRevChart('chartDl',rows);
+}
+function calcRevPeriod(){
+  clearErr('d-err-p');
+  const goal=getK('d-goal-p'),mYen=getK('d-monthly-p'),rate=parseFloat(document.getElementById('d-rate-p').value),taxed=isTaxed('d-p');
+  if(isNaN(goal)||goal<=0){showErr('d-err-p','目標金額を千円単位で入力してください');return;}
+  if(isNaN(mYen)||mYen<=0){showErr('d-err-p','月額積立を千円単位で入力してください');return;}
+  if(isNaN(rate)||rate<=0||rate>100){showErr('d-err-p','年利は0より大きい値で入力してください');return;}
+  const mr=(rate/12)/100;let bal=0,foundMonth=null,rows=[];
+  for(let m=1;m<=1200;m++){const int=bal*mr,ni=netInterest(int,taxed);bal=bal+ni+mYen;const pr=mYen*m,pf=bal-pr;rows.push({month:m,principal:Math.round(pr),balance:Math.round(bal),profit:Math.round(pf),rate:pr>0?pf/pr*100:0,evt:false});if(bal>=goal&&foundMonth===null)foundMonth=m;}
+  if(foundMonth===null){showErr('d-err-p','100年以内には目標に到達できません。月額積立額を増やすか、年利を見直してください。');return;}
+  rows=rows.slice(0,foundMonth);const last=rows[rows.length-1],principal=mYen*foundMonth,profit=last.balance-principal,ps=periodStr(foundMonth);
+  document.getElementById('d-ans-period').textContent=ps;
+  document.getElementById('d-ans-period-sub').textContent=`月 ${jpy(mYen)} 積立で目標 ${jpy(goal)} 達成`;
+  document.getElementById('d-p-goal').textContent=jpy(last.balance);document.getElementById('d-p-principal').textContent=jpy(principal);document.getElementById('d-p-profit').textContent='+'+jpy(profit);
+  document.getElementById('d-p-note').innerHTML=`<strong>計算条件：</strong>年利 ${rate}%・月額 ${jpy(mYen)}・${taxed?'課税（源泉20.315%）':'非課税（NISA等）'}<br><strong>${ps}</strong>（${foundMonth}ヶ月）後に <strong>${jpy(last.balance)}</strong> になります。（元本 ${jpy(principal)} ＋ 運用益 ${jpy(profit)}）`;
+  document.getElementById('d-results-p').style.display='block';
+  if(cDp)cDp.destroy();cDp=drawRevChart('chartDp',rows);
+}
+
+/* ── グラフ ── */
+function fmtY(v){if(v>=1e8)return '¥'+(v/1e8).toFixed(1).replace(/\.0$/,'')+'億';if(v>=1e4)return '¥'+Math.round(v/1e4).toLocaleString()+'万';return '¥'+Math.round(v).toLocaleString();}
+function makeLabels(rows){return rows.map(r=>{if(r.month%12===0)return Math.round(r.month/12)+'年目';if(r.month===1||r.month===rows.length)return r.month+'ヶ月';return ''+r.month;});}
+function drawRevChart(canvasId,rows){
+  const labels=makeLabels(rows);
+  return new Chart(document.getElementById(canvasId),{type:'line',data:{labels,datasets:[
+    {label:'運用残高',data:rows.map(r=>r.balance),borderColor:'#C04B20',backgroundColor:'rgba(192,75,32,0.07)',borderWidth:2,pointRadius:0,pointHoverRadius:5,fill:false,tension:0.35},
+    {label:'元本',data:rows.map(r=>r.principal),borderColor:'#C04B2088',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,tension:0.35}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'#7A3010',titleColor:'#FDD9C8',bodyColor:'#FDF0EA',titleFont:{size:13},bodyFont:{size:14},padding:12,cornerRadius:7,displayColors:true,boxWidth:10,boxHeight:10,
+      callbacks:{title:items=>labels[items[0].dataIndex],label:ctx=>{const v='¥'+Math.round(ctx.raw).toLocaleString('ja-JP');return ctx.datasetIndex===0?'残高：'+v:'元本：'+v;}}}},
+    scales:{x:{ticks:{font:{size:12},maxTicksLimit:9,color:'#888780',callback:function(val){const l=this.getLabelForValue(val);return l.includes('年目')||l.includes('ヶ月')?l:'';}},grid:{color:'rgba(136,135,128,0.12)'}},
+      y:{ticks:{callback:fmtY,font:{size:12},color:'#888780'},grid:{color:'rgba(136,135,128,0.12)'}}}}});
+}
+function drawChart(canvasId,rows,evtMonths,style){
+  const map={chartA:()=>cA,chartB:()=>cB,chartC:()=>cC};const inst=map[canvasId]();if(inst)inst.destroy();
+  const evtSet=new Set(evtMonths);const labels=makeLabels(rows);
+  const pointR=rows.map(r=>evtSet.has(r.month)?5:0);const pointBg=rows.map(r=>evtSet.has(r.month)?'#D85A30':style.border);
+  const chart=new Chart(document.getElementById(canvasId),{type:'line',data:{labels,datasets:[
+    {label:'運用残高',data:rows.map(r=>r.balance),borderColor:style.border,backgroundColor:style.bg,borderWidth:2,pointRadius:pointR,pointBackgroundColor:pointBg,pointBorderColor:'#fff',pointBorderWidth:1.5,pointHoverRadius:6,pointHoverBackgroundColor:pointBg,fill:false,tension:0.35,order:1},
+    {label:'元本',data:rows.map(r=>r.principal),borderColor:style.border+'88',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,4],pointRadius:0,pointHoverRadius:4,fill:false,tension:0.35,order:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:style.tip.bg,titleColor:style.tip.title,bodyColor:style.tip.body,titleFont:{size:13},bodyFont:{size:14},padding:12,cornerRadius:7,displayColors:true,boxWidth:10,boxHeight:10,
+      callbacks:{title:items=>labels[items[0].dataIndex],label:ctx=>{const v='¥'+Math.round(ctx.raw).toLocaleString('ja-JP');return ctx.datasetIndex===0?'残高：'+v:'元本：'+v;},afterBody:ctx=>{const r=rows[ctx[0].dataIndex];return r.evt?[r.evt]:[];}}}},
+    scales:{x:{ticks:{font:{size:12},maxTicksLimit:9,color:'#888780',callback:function(val){const l=this.getLabelForValue(val);return l.includes('年目')||l.includes('ヶ月')?l:'';}},grid:{color:'rgba(136,135,128,0.12)'}},
+      y:{ticks:{callback:fmtY,font:{size:12},color:'#888780'},grid:{color:'rgba(136,135,128,0.12)'}}}}});
+  if(canvasId==='chartA')cA=chart;else if(canvasId==='chartB')cB=chart;else cC=chart;
+}
+
+/* ── 計算ハンドラ ── */
+function calcA(){
+  clearErr('a-err');const months=parseInt(document.getElementById('a-months').value),rate=parseFloat(document.getElementById('a-rate').value),mYen=getK('a-monthly'),taxed=isTaxed('a');
+  if(!months||months<1||isNaN(months)){showErr('a-err','運用期間は1以上の整数で入力してください');return;}
+  if(isNaN(rate)||rate<0||rate>100){showErr('a-err','年利は0〜100%で入力してください');return;}
+  if(isNaN(mYen)||mYen<0){showErr('a-err','積立額を千円単位で入力してください');return;}
+  const {rows,grossProfit,taxTotal}=simA(months,rate,mYen,taxed);const last=rows[rows.length-1];
+  document.getElementById('a-result-label').innerHTML='計算結果'+taxBadge(taxed);
+  document.getElementById('a-final').textContent=jpy(last.balance);document.getElementById('a-principal').textContent=jpy(last.principal);document.getElementById('a-profit').textContent='+'+jpy(last.profit);document.getElementById('a-yield').textContent=last.rate.toFixed(1)+'%';
+  showTaxDetail('a',grossProfit,taxTotal,taxed);document.getElementById('a-results').style.display='block';
+  drawChart('chartA',rows,[],{border:'#1D9E75',bg:'rgba(29,158,117,0.07)',tip:{bg:'#0F6E56',title:'#9FE1CB',body:'#E1F5EE'}});renderTable('a',rows);
+}
+function calcB(){
+  clearErr('b-err');const months=parseInt(document.getElementById('b-months').value),rate=parseFloat(document.getElementById('b-rate').value),initYen=getK('b-initial'),taxed=isTaxed('b');
+  if(!months||months<1||isNaN(months)){showErr('b-err','運用期間は1以上の整数で入力してください');return;}
+  if(isNaN(rate)||rate<0||rate>100){showErr('b-err','年利は0〜100%で入力してください');return;}
+  if(isNaN(initYen)||initYen<0){showErr('b-err','初期投資額を千円単位で入力してください');return;}
+  const evtList=[];const usedM=new Set();let ok=true;
+  evtsB.forEach(e=>{if(!ok)return;const m=parseInt(document.getElementById('em-b-'+e.id).value);if(!m||m<1||m>months){showErr('b-err','発生月は1〜'+months+'の整数で入力してください');ok=false;return;}if(usedM.has(m)){showErr('b-err','イベントの発生月が重複しています（'+m+'月）');ok=false;return;}usedM.add(m);const rv=document.getElementById('er-b-'+e.id).value;const aR=parseFloat(document.getElementById('ea-b-'+e.id).value);const wR=parseFloat(document.getElementById('ew-b-'+e.id).value);evtList.push({month:m,newRate:rv!==''?parseFloat(rv):null,add:isNaN(aR)?0:Math.round(aR)*1000,wd:isNaN(wR)?0:Math.round(wR)*1000});});
+  if(!ok)return;evtList.sort((a,b)=>a.month-b.month);
+  const {rows,grossProfit,taxTotal}=simB(months,rate,initYen,evtList,taxed);const last=rows[rows.length-1];
+  document.getElementById('b-final').textContent=jpy(last.balance);document.getElementById('b-principal').textContent=jpy(last.principal);document.getElementById('b-profit').textContent=(last.profit>=0?'+':'')+jpy(last.profit);document.getElementById('b-yield').textContent=last.rate.toFixed(1)+'%';
+  showTaxDetail('b',grossProfit,taxTotal,taxed);document.getElementById('b-results').style.display='block';
+  drawChart('chartB',rows,evtList.map(e=>e.month),{border:'#378ADD',bg:'rgba(55,138,221,0.07)',tip:{bg:'#185FA5',title:'#B5D4F4',body:'#E6F1FB'}});renderTable('b',rows);
+}
+function calcC(){
+  clearErr('c-err');const months=parseInt(document.getElementById('c-months').value),rate=parseFloat(document.getElementById('c-rate').value),initM=getK('c-monthly'),taxed=isTaxed('c');
+  if(!months||months<1||isNaN(months)){showErr('c-err','運用期間は1以上の整数で入力してください');return;}
+  if(isNaN(rate)||rate<0||rate>100){showErr('c-err','年利は0〜100%で入力してください');return;}
+  if(isNaN(initM)||initM<0){showErr('c-err','積立額を千円単位で入力してください');return;}
+  const evtList=[];const usedM=new Set();let ok=true;
+  evtsC.forEach(e=>{if(!ok)return;const m=parseInt(document.getElementById('em-c-'+e.id).value);if(!m||m<1||m>months){showErr('c-err','発生月は1〜'+months+'の整数で入力してください');ok=false;return;}if(usedM.has(m)){showErr('c-err','イベントの発生月が重複しています（'+m+'月）');ok=false;return;}usedM.add(m);const rv=document.getElementById('er-c-'+e.id).value;const mv=document.getElementById('em2-c-'+e.id).value;const newR=rv!==''?parseFloat(rv):null;const newM=mv!==''?Math.round(parseFloat(mv))*1000:null;if(newR===null&&newM===null){showErr('c-err','イベント'+(evtsC.indexOf(e)+1)+'：年利か積立額のどちらかを入力してください');ok=false;return;}evtList.push({month:m,newRate:newR,newMonthly:newM});});
+  if(!ok)return;evtList.sort((a,b)=>a.month-b.month);
+  const {rows,phases,grossProfit,taxTotal}=simC(months,rate,initM,evtList,taxed);const last=rows[rows.length-1];
+  document.getElementById('c-final').textContent=jpy(last.balance);document.getElementById('c-principal').textContent=jpy(last.principal);document.getElementById('c-profit').textContent=(last.profit>=0?'+':'')+jpy(last.profit);document.getElementById('c-yield').textContent=last.rate.toFixed(1)+'%';
+  showTaxDetail('c',grossProfit,taxTotal,taxed);document.getElementById('c-results').style.display='block';
+  drawChart('chartC',rows,evtList.map(e=>e.month),{border:'#7F77DD',bg:'rgba(127,119,221,0.07)',tip:{bg:'#534AB7',title:'#CECBF6',body:'#EEEDFE'}});renderPhaseInfo(phases,months);renderTable('c',rows);
+}
+
+/* ── テーブル ── */
+function renderTable(mode,rows){
+  const tbody=document.getElementById(mode+'-tbl-body');const frag=document.createDocumentFragment();
+  rows.forEach(r=>{const tr=document.createElement('tr');if(r.evt)tr.classList.add('evt-row');const ml=r.month%12===0?Math.round(r.month/12)+'年目（'+r.month+'ヶ月）':r.month+'ヶ月目';const eh=r.evt?`<span class="evt-tag">${r.evt}</span>`:'';tr.innerHTML=`<td>${ml}${eh}</td><td>${jpyFull(r.principal)}</td><td>${jpyFull(r.balance)}</td><td class="pos">+${jpyFull(r.profit)}</td><td class="pos">${r.rate.toFixed(2)}%</td>`;frag.appendChild(tr);});
+  tbody.innerHTML='';tbody.appendChild(frag);
+}
+function toggleTbl(mode){
+  tblOpen[mode]=!tblOpen[mode];const wrap=document.getElementById(mode+'-tbl-wrap');const btn=wrap.closest('.tbl-section').querySelector('.tbl-toggle');wrap.style.display=tblOpen[mode]?'':'none';btn.textContent=tblOpen[mode]?'▲ 折りたたむ':'▼ 展開する';
+}
+function renderPhaseInfo(phases,totalMonths){
+  const el=document.getElementById('c-phase-info');const colors=['#1D9E75','#534AB7','#D85A30','#185FA5','#BA7517'];
+  let html='<div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">積立フェーズ</div>';
+  phases.forEach((p,i)=>{const to=i+1<phases.length?phases[i+1].from-1:totalMonths;const dur=to-p.from+1;html+=`<div class="phase-row"><div class="phase-dot" style="background:${colors[i%colors.length]}"></div><div>${p.from}〜${to}ヶ月目（${dur}ヶ月）：年利 ${p.rate}%、月々 ${jpy(p.monthly)}</div></div>`;});
+  el.innerHTML=html;
+}
+
+/* ── 比較機能 ── */
+function getBaseParams(mode){
+  if(mode==='a')return{months:parseInt(document.getElementById('a-months').value)||null,rate:parseFloat(document.getElementById('a-rate').value),mYen:(parseFloat(document.getElementById('a-monthly').value)||0)*1000};
+  if(mode==='b')return{months:parseInt(document.getElementById('b-months').value)||null,rate:parseFloat(document.getElementById('b-rate').value),initYen:(parseFloat(document.getElementById('b-initial').value)||0)*1000};
+  return{months:parseInt(document.getElementById('c-months').value)||null,rate:parseFloat(document.getElementById('c-rate').value),mYen:(parseFloat(document.getElementById('c-monthly').value)||0)*1000};
+}
+function openCmp(mode){
+  const panel=document.getElementById(mode+'-cmp');panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'start'});
+  const p=getBaseParams(mode);const taxed=isTaxed(mode);const taxStr=taxed?'・課税20.315%':'・非課税';
+  const descEl=document.getElementById(mode+'-cmp-base-desc');
+  if(mode==='a')descEl.textContent=`期間 ${p.months??'未入力'}ヶ月 ／ 年利 ${isNaN(p.rate)?'未入力':p.rate}% ／ 積立 ${jpy(p.mYen)}/月${taxStr}`;
+  else if(mode==='b')descEl.textContent=`期間 ${p.months??'未入力'}ヶ月 ／ 年利 ${isNaN(p.rate)?'未入力':p.rate}% ／ 初期投資 ${jpy(p.initYen)}${taxStr}`;
+  else descEl.textContent=`期間 ${p.months??'未入力'}ヶ月 ／ 年利 ${isNaN(p.rate)?'未入力':p.rate}% ／ 積立 ${jpy(p.mYen)}/月${taxStr}`;
+}
+function closeCmp(mode){document.getElementById(mode+'-cmp').style.display='none';}
+function addCmpScenario(mode){
+  if(cmpScenarios[mode].length>=3)return;const id=++cmpEid[mode];cmpScenarios[mode].push({id});renderCmpScenarios(mode);
+  if(cmpScenarios[mode].length>=3)document.getElementById(mode+'-add-cmp-btn').style.display='none';
+}
+function delCmpScenario(mode,id){cmpScenarios[mode]=cmpScenarios[mode].filter(s=>s.id!==id);renderCmpScenarios(mode);document.getElementById(mode+'-add-cmp-btn').style.display='';}
+function renderCmpScenarios(mode){
+  const container=document.getElementById(mode+'-cmp-scenarios');container.innerHTML='';
+  cmpScenarios[mode].forEach((s,i)=>{
+    const color=CMP_COLORS[i];const d=document.createElement('div');d.className='cmp-scenario';
+    const monthPh=mode==='b'?'120':'240';const ratePh=mode==='b'?'4.0':'5.0';const moneyLabel=mode==='b'?'初期投資（千円）':'積立額（千円）';const moneyPh=mode==='b'?'1000':'30';
+    d.innerHTML=`<div class="cmp-scenario-header"><div class="cmp-dot" style="background:${color}"></div><span class="cmp-scenario-label">案 ${i+1}</span><button class="cmp-del" onclick="delCmpScenario('${mode}',${s.id})">×</button></div>
+    <div class="cmp-fields three"><div class="cmp-field"><label>期間（月）</label><input type="number" id="cs-months-${mode}-${s.id}" placeholder="${monthPh}" min="1" step="1"></div>
+    <div class="cmp-field"><label>年利（%）</label><input type="number" id="cs-rate-${mode}-${s.id}" placeholder="${ratePh}" min="0" max="100" step="0.1"></div>
+    <div class="cmp-field"><label>${moneyLabel}</label><div class="cmp-iw"><input type="number" id="cs-m-${mode}-${s.id}" placeholder="${moneyPh}" min="0" step="1"><span class="u">千円</span></div></div></div>`;
+    container.appendChild(d);});
+}
+function runCmp(mode){
+  clearErr(mode+'-cmp-err');const p=getBaseParams(mode);const taxed=isTaxed(mode);
+  if(!p.months||isNaN(p.rate)){showErr(mode+'-cmp-err','メインのシミュレーションに値を入力してから比較してください');return;}
+  let baseRows;
+  if(mode==='a')baseRows=simA(p.months,p.rate,p.mYen,taxed).rows;
+  else if(mode==='b')baseRows=simB(p.months,p.rate,p.initYen,[],taxed).rows;
+  else baseRows=simC(p.months,p.rate,p.mYen,[],taxed).rows;
+  const extras=[];
+  for(let i=0;i<cmpScenarios[mode].length;i++){
+    const s=cmpScenarios[mode][i];
+    const months=parseInt(document.getElementById(`cs-months-${mode}-${s.id}`).value);
+    const rate=parseFloat(document.getElementById(`cs-rate-${mode}-${s.id}`).value);
+    const mRaw=parseFloat(document.getElementById(`cs-m-${mode}-${s.id}`).value);
+    const mYen=isNaN(mRaw)?0:Math.round(mRaw)*1000;
+    if(!months||isNaN(months)||isNaN(rate)){showErr(mode+'-cmp-err',`案${i+1}：期間と年利を入力してください`);return;}
+    let rows;
+    if(mode==='a')rows=simA(months,rate,mYen,taxed).rows;
+    else if(mode==='b')rows=simB(months,rate,mYen,[],taxed).rows;
+    else rows=simC(months,rate,mYen,[],taxed).rows;
+    extras.push({rows,color:CMP_COLORS[i],label:`案${i+1}`});
+  }
+  const allSets=[{rows:baseRows,color:BASE_COLORS[mode],label:'ベース'},...extras];
+  const maxLen=Math.max(...allSets.map(s=>s.rows.length));
+  const labels=[];for(let i=1;i<=maxLen;i++){if(i%12===0)labels.push(Math.round(i/12)+'年目');else if(i===1||i===maxLen)labels.push(i+'ヶ月');else labels.push(''+i);}
+  const datasets=allSets.map(s=>[
+    {label:s.label+' 残高',data:labels.map((_,i)=>i<s.rows.length?s.rows[i].balance:null),borderColor:s.color,backgroundColor:'transparent',borderWidth:2,pointRadius:0,pointHoverRadius:4,fill:false,tension:0.35,spanGaps:false},
+    {label:s.label+' 元本',data:labels.map((_,i)=>i<s.rows.length?s.rows[i].principal:null),borderColor:s.color+'66',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,3],pointRadius:0,fill:false,tension:0.35,spanGaps:false}
+  ]).flat();
+  if(cmpCharts[mode])cmpCharts[mode].destroy();
+  cmpCharts[mode]=new Chart(document.getElementById('cmpChart'+mode.toUpperCase()),{type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{enabled:true,backgroundColor:'#1a1a2e',titleColor:'#ccc',bodyColor:'#eee',padding:12,cornerRadius:7,displayColors:true,boxWidth:10,boxHeight:10,
+        callbacks:{title:items=>labels[items[0].dataIndex],label:ctx=>{if(ctx.raw===null)return null;return ctx.dataset.label+'：¥'+Math.round(ctx.raw).toLocaleString('ja-JP');}}}},
+      scales:{x:{ticks:{font:{size:11},maxTicksLimit:9,color:'#888780',callback:function(val){const l=this.getLabelForValue(val);return l.includes('年目')||l.includes('ヶ月')?l:'';}},grid:{color:'rgba(136,135,128,0.12)'}},
+        y:{ticks:{callback:fmtY,font:{size:11},color:'#888780'},grid:{color:'rgba(136,135,128,0.12)'}}}}});
+  document.getElementById(mode+'-cmp-legend').innerHTML=allSets.map(s=>`<div class="leg-item"><div style="width:18px;height:3px;border-radius:2px;background:${s.color}"></div>${s.label}</div><div class="leg-item"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="${s.color}" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/></svg><span style="font-size:12px">${s.label} 元本</span></div>`).join('');
+  document.getElementById(mode+'-cmp-cards').innerHTML=allSets.map(s=>{const last=s.rows[s.rows.length-1];return `<div class="cmp-result-card" style="border-left:3px solid ${s.color}"><div class="cr-label"><div style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0"></div>${s.label}</div><div class="cr-stats"><div class="cr-stat"><div class="cr-key">最終運用額</div><div class="cr-val">${jpy(last.balance)}</div></div><div class="cr-stat"><div class="cr-key">元本合計</div><div class="cr-val">${jpy(last.principal)}</div></div><div class="cr-stat"><div class="cr-key">運用益（税引後）</div><div class="cr-val green">+${jpy(last.profit)}</div></div><div class="cr-stat"><div class="cr-key">元本利回り</div><div class="cr-val">${last.rate.toFixed(1)}%</div></div></div></div>`;}).join('');
+  document.getElementById(mode+'-cmp-result').style.display='block';
+}
+
+/* ── イベント管理 ── */
+function addEvt(mode){
+  const evts=mode==='b'?evtsB:evtsC;if(evts.length>=4)return;
+  const id=mode==='b'?++eidB:++eidC;if(mode==='b')eidB=id;else eidC=id;
+  evts.push({id});renderEvts(mode);if(evts.length>=4)document.getElementById(mode+'-add-btn').style.display='none';
+}
+function delEvt(mode,id){
+  if(mode==='b')evtsB=evtsB.filter(e=>e.id!==id);else evtsC=evtsC.filter(e=>e.id!==id);
+  renderEvts(mode);document.getElementById(mode+'-add-btn').style.display='';
+}
+function renderEvts(mode){
+  const evts=mode==='b'?evtsB:evtsC;const c=document.getElementById(mode+'-evt-container');c.innerHTML='';
+  evts.forEach((e,i)=>{const d=document.createElement('div');d.className='evt-block';const bc=mode==='b'?'blue':'purple';
+    const fields=mode==='b'
+      ?`<div class="field"><label>発生月</label><input class="plain-input" type="number" id="em-b-${e.id}" placeholder="12" min="1" step="1"></div><div class="field"><label>年利変更（%）任意</label><input class="plain-input" type="number" id="er-b-${e.id}" placeholder="変更なし" min="0" max="100" step="0.1"></div><div class="field"><label>追加投資額（千円）</label><div class="input-wrap"><input type="number" id="ea-b-${e.id}" placeholder="500 → 50万円" min="0" step="1"><span class="unit">千円</span></div></div><div class="field"><label>引き出し額（千円）</label><div class="input-wrap"><input type="number" id="ew-b-${e.id}" placeholder="200 → 20万円" min="0" step="1"><span class="unit">千円</span></div></div>`
+      :`<div class="field"><label>発生月</label><input class="plain-input" type="number" id="em-c-${e.id}" placeholder="61" min="1" step="1"></div><div class="field"><label>年利変更（%）任意</label><input class="plain-input" type="number" id="er-c-${e.id}" placeholder="変更なし" min="0" max="100" step="0.1"></div><div class="field full"><label>積立額の変更（千円）※変更後の新しい金額</label><div class="input-wrap"><input type="number" id="em2-c-${e.id}" placeholder="50 → 月5万円に変更" min="0" step="1"><span class="unit">千円</span></div></div>`;
+    d.innerHTML=`<div class="evt-hdr"><span class="evt-badge-el ${bc}">イベント ${i+1}</span><button class="evt-del" onclick="delEvt('${mode}',${e.id})">×</button></div><div class="evt-grid">${fields}</div>`;
+    c.appendChild(d);});
+}
+</script>
