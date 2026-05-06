@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube 原稿チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:    #FF4B4B;
+    --orange: #FF8C42;
+    --yellow: #FFD166;
+    --green:  #06D6A0;
+    --blue:   #118AB2;
+    --purple: #845EC2;
+    --bg:     #F5F5F7;
+    --surface: #EBEBF0;
+    --surface2: #E2E2E8;
+    --border-dark: rgba(0,0,0,0.07);
+    --border-light: rgba(0,0,0,0.08);
+    --text:   #1A1A2E;
+    --muted:  #6B6B80;
+    --text-body: #1A1A2E;
+    --muted-body: #6B6B80;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-body);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 80px;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 720px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,75,75,0.15);
+    border: 1px solid rgba(255,75,75,0.35);
+    color: #FF6B6B;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  h1 {
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #1A1A2E 30%, #845EC2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    color: var(--muted-body);
+    font-size: 14px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border-dark);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* Textarea */
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 18px;
+    line-height: 1.8;
+    padding: 14px 16px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: rgba(132,94,194,0.6); }
+
+  /* Metrics grid */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (min-width: 500px) {
+    .metrics { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .metric {
+    background: var(--surface2);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    padding: 16px 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .metric.m-purple::before { background: var(--purple); }
+  .metric.m-blue::before   { background: var(--blue); }
+  .metric.m-green::before  { background: var(--green); }
+  .metric.m-orange::before { background: var(--orange); }
+
+  .metric-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .metric-label {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .metric-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 30px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+  .metric.m-green .metric-value { color: var(--green); }
+
+  /* Speed buttons */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .btn {
+    padding: 12px 20px;
+    border-radius: 99px;
+    border: 1px solid var(--border-dark);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .btn:hover { border-color: rgba(0,0,0,0.18); color: var(--text); }
+  .btn.active-purple { background: rgba(132,94,194,0.12); border-color: rgba(132,94,194,0.4); color: #6340A8; font-weight: 500; }
+  .btn.active-blue   { background: rgba(17,138,178,0.12); border-color: rgba(17,138,178,0.4); color: #0E6E90; font-weight: 500; }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 10px;
+    overflow: hidden;
+    margin: 12px 0 8px;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    width: 0%;
+  }
+
+  .target-status {
+    font-size: 17px;
+    color: var(--muted);
+    min-height: 20px;
+  }
+  .target-time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .target-time span:last-child { color: var(--text); font-weight: 500; }
+
+  /* Chars needed hint */
+  .hint-box {
+    background: rgba(6,214,160,0.1);
+    border: 1px solid rgba(6,214,160,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 17px;
+    color: #04b389;
+    display: none;
+    margin-top: 12px;
+  }
+  .hint-box.show { display: block; }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted-body);
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="badge">▶ YouTube</div>
+    <h1>YouTube 原稿チェッカー</h1>
+    <p class="subtitle">原稿を貼り付けるだけで文字数・読み上げ時間を即チェック</p>
+  </header>
+
+  <!-- Paste area -->
+  <div class="card">
+    <p class="card-title">原稿を貼り付け</p>
+    <textarea id="script" placeholder="Notion などから原稿をここにコピー＆ペーストしてください..."></textarea>
+  </div>
+
+  <!-- Metrics -->
+  <div class="card">
+    <p class="card-title">文字数カウント</p>
+    <div class="metrics">
+      <div class="metric m-purple">
+        <span class="metric-icon">📄</span>
+        <div class="metric-label">総文字数<br>（スペース含む）</div>
+        <div class="metric-value" id="total-chars">0</div>
+      </div>
+      <div class="metric m-blue">
+        <span class="metric-icon">✍️</span>
+        <div class="metric-label">実文字数<br>（スペース除く）</div>
+        <div class="metric-value" id="no-space-chars">0</div>
+      </div>
+      <div class="metric m-green">
+        <span class="metric-icon">🕐</span>
+        <div class="metric-label">読み上げ時間</div>
+        <div class="metric-value" id="read-time">—</div>
+      </div>
+      <div class="metric m-orange">
+        <span class="metric-icon">📋</span>
+        <div class="metric-label">行数</div>
+        <div class="metric-value" id="line-count">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Speed -->
+  <div class="card">
+    <p class="card-title">読み上げ速度</p>
+    <div class="btn-group" id="speed-group">
+      <button class="btn" data-wpm="200" onclick="setSpeed(this)">🐢 ゆっくり<br><small>200字/分</small></button>
+      <button class="btn active-purple" data-wpm="300" onclick="setSpeed(this)">🎤 標準<br><small>300字/分</small></button>
+      <button class="btn" data-wpm="400" onclick="setSpeed(this)">⚡ 速め<br><small>400字/分</small></button>
+      <button class="btn" data-wpm="500" onclick="setSpeed(this)">🚀 早口<br><small>500字/分</small></button>
+    </div>
+  </div>
+
+  <!-- Target -->
+  <div class="card">
+    <p class="card-title">目標動画時間</p>
+    <div class="btn-group" id="target-group">
+      <button class="btn" data-min="3" onclick="setTarget(this)">3分</button>
+      <button class="btn" data-min="5" onclick="setTarget(this)">5分</button>
+      <button class="btn active-blue" data-min="10" onclick="setTarget(this)">10分</button>
+      <button class="btn" data-min="15" onclick="setTarget(this)">15分</button>
+      <button class="btn" data-min="20" onclick="setTarget(this)">20分</button>
+    </div>
+    <div class="target-time">
+      <span>現在の読み上げ時間</span>
+      <span id="target-label">— / 10分</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <p class="target-status" id="target-msg"></p>
+    <div class="hint-box" id="hint-box"></div>
+  </div>
+
+  <footer>Made for YouTubers · 読み上げ速度は個人差があります</footer>
+</div>
+
+<script>
+let wpm = 300, targetMin = 10;
+
+function setSpeed(btn) {
+  document.querySelectorAll('[data-wpm]').forEach(b => b.classList.remove('active-purple'));
+  btn.classList.add('active-purple');
+  wpm = parseInt(btn.dataset.wpm);
+  update();
+}
+function setTarget(btn) {
+  document.querySelectorAll('[data-min]').forEach(b => b.classList.remove('active-blue'));
+  btn.classList.add('active-blue');
+  targetMin = parseInt(btn.dataset.min);
+  update();
+}
+
+function fmt(secs) {
+  const m = Math.floor(secs / 60);
+  const s = Math.round(secs % 60);
+  return m + '分' + String(s).padStart(2, '0') + '秒';
+}
+
+function update() {
+  const text = document.getElementById('script').value;
+  const total = text.length;
+  const noSpace = text.replace(/[\s\u3000\r\n]/g, '').length;
+  const lines = text === '' ? 0 : text.split('\n').length;
+  const secs = noSpace / wpm * 60;
+  const targetSecs = targetMin * 60;
+  const ratio = noSpace > 0 ? secs / targetSecs : 0;
+  const pct = Math.min(ratio * 100, 100);
+
+  document.getElementById('total-chars').textContent = total.toLocaleString();
+  document.getElementById('no-space-chars').textContent = noSpace.toLocaleString();
+  document.getElementById('read-time').textContent = noSpace === 0 ? '—' : fmt(secs);
+  document.getElementById('line-count').textContent = lines.toLocaleString();
+
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = pct + '%';
+  bar.style.background = ratio > 1.1 ? '#FF4B4B' : ratio > 0.9 ? '#06D6A0' : '#118AB2';
+
+  document.getElementById('target-label').textContent = (noSpace === 0 ? '—' : fmt(secs)) + ' / ' + targetMin + '分';
+
+  const msg = document.getElementById('target-msg');
+  const hint = document.getElementById('hint-box');
+  if (noSpace === 0) { msg.textContent = ''; hint.classList.remove('show'); return; }
+
+  const diff = Math.abs(secs - targetSecs);
+  if (ratio < 0.9) {
+    msg.textContent = '📝 まだ余裕があります';
+    const needed = Math.round((targetSecs - secs) / 60 * wpm);
+    hint.textContent = `あと約 ${needed.toLocaleString()} 文字追加すると ${targetMin} 分になります`;
+    hint.classList.add('show');
+  } else if (ratio > 1.1) {
+    msg.textContent = '✂️ 少し長すぎます — カットを検討しましょう';
+    const over = Math.round((secs - targetSecs) / 60 * wpm);
+    hint.textContent = `約 ${over.toLocaleString()} 文字削ると ${targetMin} 分になります`;
+    hint.classList.add('show');
+  } else {
+    msg.textContent = '✅ 目標時間にぴったりです！';
+    hint.classList.remove('show');
+  }
+}
+
+document.getElementById('script').addEventListener('input', update);
+</script>
+</body>
+</html>
