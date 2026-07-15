@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>変動率計算tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+  :root{
+    --bg: #14161a;
+    --bg2: #1b1e25;
+    --panel: #1c1f26;
+    --panel-2: #22262f;
+    --line: #2b2f38;
+    --text: #e8eaed;
+    --sub: #8a8f99;
+    --up: #26d97c;
+    --up-dim: #1a5e42;
+    --down: #ff5c5c;
+    --down-dim: #6e2626;
+    --accent: #ffb020;
+  }
+
+  /* テーマパターン（設定タブから切替） */
+  body.theme-dark{
+    --bg:#14161a; --bg2:#1b1e25; --panel:#1c1f26; --panel-2:#22262f; --line:#2b2f38;
+    --text:#e8eaed; --sub:#8a8f99; --up:#26d97c; --down:#ff5c5c; --accent:#ffb020;
+  }
+  body.theme-light{
+    --bg:#f7f8fa; --bg2:#ffffff; --panel:#ffffff; --panel-2:#f1f3f6; --line:#e2e5ea;
+    --text:#1c1f26; --sub:#6b7280; --up:#0f9d58; --down:#d93025; --accent:#2563eb;
+  }
+  body.theme-navy{
+    --bg:#0b1220; --bg2:#101b30; --panel:#131f36; --panel-2:#182544; --line:#22314f;
+    --text:#eef2f9; --sub:#8a99b8; --up:#33d17a; --down:#ff6b6b; --accent:#f2b544;
+  }
+  body.theme-paper{
+    --bg:#f4efe4; --bg2:#ece4d2; --panel:#fbf8f1; --panel-2:#efe8d8; --line:#ddd2b8;
+    --text:#33291f; --sub:#8a7c63; --up:#3f7d4f; --down:#b3452c; --accent:#b3452c;
+  }
+  body.theme-contrast{
+    --bg:#000000; --bg2:#000000; --panel:#000000; --panel-2:#141414; --line:#ffffff;
+    --text:#ffffff; --sub:#cfcfcf; --up:#00ff6a; --down:#ff3b3b; --accent:#ffe600;
+  }
+
+  html{ font-size: 16px; }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 20% 0%, var(--bg2) 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 32px 16px 60px;
+    min-height: 100vh;
+    transition: background .2s ease, color .2s ease;
+  }
+
+  .wrap{ max-width: 460px; margin: 0 auto; }
+
+  .ticker{
+    font-family:'Roboto Mono', monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    color: var(--sub);
+    text-align:center;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  h1{
+    font-size: 1.375rem;
+    font-weight: 700;
+    text-align:center;
+    margin: 0 0 24px;
+    letter-spacing: 0.02em;
+  }
+  h1 span{ color: var(--accent); }
+
+  .tabs{
+    display:flex;
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+    border: 1px solid var(--line);
+  }
+  .tabs button{
+    flex:1;
+    background: transparent;
+    color: var(--sub);
+    border:none;
+    padding: 11px 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: 7px;
+    cursor:pointer;
+    transition: all .18s ease;
+  }
+  .tabs button.active{
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .tabs button:not(.active):hover{ color: var(--text); }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block;
+    font-size: 0.6875rem;
+    color: var(--sub);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+  .input-box{
+    width:100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 13px 14px;
+    font-size: 1.0625rem;
+    font-family: 'Roboto Mono', monospace;
+    border-radius: 9px;
+    outline: none;
+    transition: border-color .15s ease;
+  }
+  .input-box::placeholder{ color: #565b66; font-family: 'Noto Sans JP', sans-serif; font-size: 0.8125rem;}
+  .input-box:focus{ border-color: var(--accent); }
+
+  .rate-buttons{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 4px 0 18px;
+  }
+  .rate-buttons button{
+    padding: 9px 4px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .rate-buttons button.up:hover{ border-color: var(--up); color: var(--up); }
+  .rate-buttons button.down:hover{ border-color: var(--down); color: var(--down); }
+
+  .calc-btn{
+    width:100%;
+    background: var(--accent);
+    color: #14161a;
+    border:none;
+    padding: 14px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    border-radius: 9px;
+    cursor:pointer;
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+    transition: transform .12s ease, filter .12s ease;
+    font-family: inherit;
+  }
+  .calc-btn:hover{ filter: brightness(1.08); }
+  .calc-btn:active{ transform: scale(0.98); }
+
+  .result-area{
+    margin-top: 18px;
+    padding: 0;
+  }
+  .result-area:empty{ margin-top:0; }
+
+  .result-row{
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 13px 16px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .result-row .label{ font-size: 0.75rem; color: var(--sub); }
+  .result-row .value{
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+  .up-text{ color: var(--up); }
+  .down-text{ color: var(--down); }
+  .neutral-text{ color: var(--text); }
+
+  .placeholder-hint{
+    text-align:center;
+    color: #4d525c;
+    font-size: 0.75rem;
+    padding: 20px 0 4px;
+  }
+
+  .table-wrap{
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .rate-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.875rem;
+  }
+  .rate-table thead th{
+    position: sticky;
+    top: 0;
+    background: var(--panel-2);
+    color: var(--sub);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 10px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--line);
+    z-index: 1;
+  }
+  .rate-table thead th:first-child{ text-align:left; }
+  .rate-table tbody td{
+    padding: 9px 14px;
+    text-align: right;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .rate-table tbody td:first-child{
+    text-align:left;
+    font-weight: 700;
+  }
+  .rate-table tbody tr:last-child td{ border-bottom: none; }
+  .rate-table tbody tr:hover td{ background: rgba(255,255,255,0.02); }
+
+  /* 幅470px超のスクロールバー調整 */
+  .table-wrap::-webkit-scrollbar{ width: 6px; }
+  .table-wrap::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 3px; }
+
+  .table-toolbar{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+  .table-hint{
+    font-size: 0.6875rem;
+    color: var(--sub);
+    letter-spacing: 0.02em;
+  }
+  .sort-toggle-btn{
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .sort-toggle-btn:hover{
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .settings-group{ margin-bottom: 22px; }
+  .settings-group:last-child{ margin-bottom: 0; }
+  .settings-group > label{
+    display:block;
+    font-size: 0.6875rem;
+    color: var(--sub);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .segmented{
+    display:flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .segmented-btn{
+    flex: 1;
+    min-width: 70px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .segmented-btn.selected{
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
+  }
+  .segmented-btn:hover:not(.selected){ border-color: var(--sub); }
+
+  .theme-grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .theme-swatch{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    cursor:pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all .15s ease;
+  }
+  .theme-swatch.selected{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .swatch-dot{
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(128,128,128,0.4);
+  }
+  .swatch-label{
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="ticker">PRICE · DELTA · PERCENT</div>
+  <h1>変動率<span>計算tool</span></h1>
+
+  <div class="tabs">
+    <button id="tab1" class="active">変動率</button>
+    <button id="tab2">範囲一覧</button>
+    <button id="tab3">設定</button>
+  </div>
+
+  <div class="card">
+    <div id="content"></div>
+  </div>
+</div>
+
+<script>
+  loadTab1();
+
+  document.getElementById("tab1").onclick = () => { setActiveTab("tab1"); loadTab1(); };
+  document.getElementById("tab2").onclick = () => { setActiveTab("tab2"); loadTab2(); };
+  document.getElementById("tab3").onclick = () => { setActiveTab("tab3"); loadTab3(); };
+
+  function setActiveTab(tabId){
+    document.getElementById("tab1").classList.remove("active");
+    document.getElementById("tab2").classList.remove("active");
+    document.getElementById("tab3").classList.remove("active");
+    document.getElementById(tabId).classList.add("active");
+  }
+
+  function fmt(n){
+    return n.toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+  }
+
+  // -------------------------
+  // 設定（刻み幅・テーマ・文字サイズ）
+  // -------------------------
+  const THEMES = [
+    { id: 'dark',     name: 'ダーク・ターミナル',   bg: '#14161a', accent: '#ffb020', fg: '#e8eaed' },
+    { id: 'light',    name: 'ライト・ミニマル',     bg: '#f7f8fa', accent: '#2563eb', fg: '#1c1f26' },
+    { id: 'navy',     name: 'ネイビー・ファイナンス', bg: '#0b1220', accent: '#f2b544', fg: '#eef2f9' },
+    { id: 'paper',    name: 'ウォーム・レジャー',   bg: '#f4efe4', accent: '#b3452c', fg: '#33291f' },
+    { id: 'contrast', name: 'ハイコントラスト',     bg: '#000000', accent: '#ffe600', fg: '#ffffff' },
+  ];
+  const FONT_SIZES = [
+    { id: 14, label: '小' },
+    { id: 16, label: '標準' },
+    { id: 18, label: '大' },
+    { id: 21, label: '特大' },
+  ];
+
+  const settings = { step: 1, theme: 'dark', fontSize: 16, colorSwap: false };
+
+  function colorClass(isUp, isFlat){
+    if (isFlat) return 'neutral-text';
+    const useUpColor = settings.colorSwap ? !isUp : isUp;
+    return useUpColor ? 'up-text' : 'down-text';
+  }
+
+  function applyTheme(themeId){
+    settings.theme = themeId;
+    document.body.className = 'theme-' + themeId;
+  }
+  function applyFontSize(px){
+    settings.fontSize = px;
+    document.documentElement.style.fontSize = px + 'px';
+  }
+  applyTheme(settings.theme);
+  applyFontSize(settings.fontSize);
+
+  // -------------------------
+  // タブ1：価格 → 変動率
+  // -------------------------
+  function loadTab1(){
+    document.getElementById("content").innerHTML = `
+      <div class="field">
+        <label>価格A（基準）</label>
+        <input id="priceA" class="input-box" type="number" placeholder="例：1000" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>価格B（比較）</label>
+        <input id="priceB" class="input-box" type="number" placeholder="例：1200" inputmode="decimal">
+      </div>
+
+      <button class="calc-btn" onclick="calcRate()">計算する</button>
+
+      <div id="result" class="result-area">
+        <div class="placeholder-hint">価格Aと価格Bを入力してください</div>
+      </div>
+    `;
+    document.getElementById("priceA").addEventListener("keydown", e => { if(e.key==="Enter") calcRate(); });
+    document.getElementById("priceB").addEventListener("keydown", e => { if(e.key==="Enter") calcRate(); });
+  }
+
+  function calcRate(){
+    const A = parseFloat(document.getElementById("priceA").value);
+    const B = parseFloat(document.getElementById("priceB").value);
+
+    if (isNaN(A) || isNaN(B) || A === 0) {
+      document.getElementById("result").innerHTML =
+        `<div class="placeholder-hint">価格を正しく入力してください（Aは0以外）</div>`;
+      return;
+    }
+
+    const diff = B - A;
+    const rate = ((B - A) / A) * 100;
+    const isUp = diff >= 0;
+    const cls = colorClass(isUp, false);
+
+    document.getElementById("result").innerHTML = `
+      <div class="result-row">
+        <span class="label">差額</span>
+        <span class="value ${cls}">${isUp ? '+' : ''}${fmt(diff)} 円</span>
+      </div>
+      <div class="result-row">
+        <span class="label">変動率</span>
+        <span class="value ${cls}">${isUp ? '+' : ''}${rate.toFixed(2)} %</span>
+      </div>
+      <div class="result-row">
+        <span class="label">判定</span>
+        <span class="value ${cls}">${isUp ? '上昇 ▲' : '下落 ▼'}</span>
+      </div>
+    `;
+  }
+
+  // -------------------------
+  // タブ2：基準価格 × 範囲％ → 1%刻み一覧
+  // -------------------------
+  function loadTab2(){
+    document.getElementById("content").innerHTML = `
+      <div class="field">
+        <label>基準価格</label>
+        <input id="basePrice" class="input-box" type="number" placeholder="例：1000" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label>変動率の範囲（%）</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input id="rateMin" class="input-box" type="number" placeholder="下限 例：-50" inputmode="decimal" style="flex:1;">
+          <span style="color:var(--sub); font-family:'Roboto Mono',monospace;">〜</span>
+          <input id="rateMax" class="input-box" type="number" placeholder="上限 例：-35" inputmode="decimal" style="flex:1;">
+        </div>
+        <div style="font-size:0.6875rem; color:var(--sub); margin-top:6px;">刻み幅：${settings.step === 1 ? '1%' : '0.5%'}（設定タブで変更できます）</div>
+      </div>
+
+      <button class="calc-btn" onclick="calcRange()">計算する</button>
+
+      <div id="result" class="result-area">
+        <div class="placeholder-hint">基準価格と範囲（下限・上限）を入力してください</div>
+      </div>
+    `;
+    ["basePrice","rateMin","rateMax"].forEach(id => {
+      document.getElementById(id).addEventListener("keydown", e => { if(e.key==="Enter") calcRange(); });
+    });
+  }
+
+  let rangeData = null;   // { base, min, max }
+  let rangeDesc = true;   // true = 大きい％が上（降順）
+
+  function calcRange(){
+    const base = parseFloat(document.getElementById("basePrice").value);
+    let min = parseFloat(document.getElementById("rateMin").value);
+    let max = parseFloat(document.getElementById("rateMax").value);
+
+    if (isNaN(base) || isNaN(min) || isNaN(max)) {
+      document.getElementById("result").innerHTML =
+        `<div class="placeholder-hint">基準価格と範囲（下限・上限）を入力してください</div>`;
+      return;
+    }
+
+    const step = settings.step;
+    min = Math.round(min / step) * step;
+    max = Math.round(max / step) * step;
+
+    if (min > max) { const t = min; min = max; max = t; }
+
+    const rowCount = Math.round((max - min) / step) + 1;
+    if (rowCount > 400) {
+      document.getElementById("result").innerHTML =
+        `<div class="placeholder-hint">範囲が広すぎます。範囲を狭めるか刻み幅を変更してください</div>`;
+      return;
+    }
+
+    rangeData = { base, min, max };
+    rangeDesc = true; // 新しく計算するたびに大きい％が上の状態にリセット
+    renderRangeTable();
+  }
+
+  function toggleRangeSort(){
+    if (!rangeData) return;
+    rangeDesc = !rangeDesc;
+    renderRangeTable();
+  }
+
+  function renderRangeTable(){
+    const { base, min, max } = rangeData;
+    const step = settings.step;
+    const steps = Math.round((max - min) / step);
+
+    let rows = "";
+    if (rangeDesc) {
+      for (let i = 0; i <= steps; i++) {
+        const r = Math.round((max - i * step) * 100) / 100;
+        rows += rangeRowHtml(base, r);
+      }
+    } else {
+      for (let i = 0; i <= steps; i++) {
+        const r = Math.round((min + i * step) * 100) / 100;
+        rows += rangeRowHtml(base, r);
+      }
+    }
+
+    document.getElementById("result").innerHTML = `
+      <div class="table-toolbar">
+        <span class="table-hint">${rangeDesc ? '大きい％が上' : '小さい％が上'}</span>
+        <button class="sort-toggle-btn" onclick="toggleRangeSort()">
+          ${rangeDesc ? '▲ 昇順に反転' : '▼ 降順に反転'}
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="rate-table">
+          <thead>
+            <tr><th>変動率</th><th>価格</th><th>差額</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function rangeRowHtml(base, r){
+    const price = base * (1 + r / 100);
+    const diff = base * (r / 100);
+    const isUp = r > 0;
+    const isFlat = r === 0;
+    const cls = colorClass(isUp, isFlat);
+    const rLabel = settings.step === 1 ? r.toFixed(0) : r.toFixed(1);
+    return `
+      <tr>
+        <td class="${cls}">${r > 0 ? '+' : ''}${rLabel}%</td>
+        <td>${fmt(price)} 円</td>
+        <td class="${cls}">${diff > 0 ? '+' : ''}${fmt(diff)}</td>
+      </tr>`;
+  }
+
+  // -------------------------
+  // タブ3：設定
+  // -------------------------
+  function loadTab3(){
+    const themeSwatches = THEMES.map(t => `
+      <button class="theme-swatch ${settings.theme === t.id ? 'selected' : ''}"
+              onclick="selectTheme('${t.id}')" style="background:${t.bg};">
+        <span class="swatch-dot" style="background:${t.accent};"></span>
+        <span class="swatch-label" style="color:${t.fg};">${t.name}</span>
+      </button>
+    `).join('');
+
+    const fontButtons = FONT_SIZES.map(f => `
+      <button class="segmented-btn ${settings.fontSize === f.id ? 'selected' : ''}"
+              onclick="selectFontSize(${f.id})">${f.label}</button>
+    `).join('');
+
+    document.getElementById("content").innerHTML = `
+      <div class="settings-group">
+        <label>変動率一覧の刻み幅</label>
+        <div class="segmented">
+          <button class="segmented-btn ${settings.step === 1 ? 'selected' : ''}" onclick="selectStep(1)">1% 刻み</button>
+          <button class="segmented-btn ${settings.step === 0.5 ? 'selected' : ''}" onclick="selectStep(0.5)">0.5% 刻み</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <label>デザインテーマ</label>
+        <div class="theme-grid">${themeSwatches}</div>
+      </div>
+
+      <div class="settings-group">
+        <label>上昇・下落の色</label>
+        <div class="segmented">
+          <button class="segmented-btn ${!settings.colorSwap ? 'selected' : ''}" onclick="selectColorSwap(false)">上昇=緑 / 下落=赤</button>
+          <button class="segmented-btn ${settings.colorSwap ? 'selected' : ''}" onclick="selectColorSwap(true)">上昇=赤 / 下落=緑</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <label>文字サイズ</label>
+        <div class="segmented">${fontButtons}</div>
+      </div>
+
+      <div class="placeholder-hint" style="padding-top:6px;">設定はこのページを開いている間だけ有効です</div>
+    `;
+  }
+
+  function selectStep(step){
+    settings.step = step;
+    loadTab3();
+    if (rangeData) renderRangeTable();
+  }
+  function selectTheme(themeId){
+    applyTheme(themeId);
+    loadTab3();
+  }
+  function selectFontSize(px){
+    applyFontSize(px);
+    loadTab3();
+  }
+  function selectColorSwap(swap){
+    settings.colorSwap = swap;
+    loadTab3();
+    if (rangeData) renderRangeTable();
+  }
+</script>
+
+</body>
+</html>
