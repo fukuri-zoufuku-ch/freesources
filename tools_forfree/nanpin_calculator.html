@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ナンピン計算ツール</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --scale: 1; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: #f5f4f0;
+      color: #1a1a18;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      font-size: calc(15px * var(--scale));
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: calc(20px * var(--scale)); font-weight: 500; margin-bottom: 1.5rem; color: #1a1a18; }
+
+    /* 文字サイズコントロールバー */
+    .font-ctrl {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1.25rem; padding: 8px 14px;
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.12); border-radius: 10px;
+    }
+    .font-ctrl-label { font-size: calc(12px * var(--scale)); color: #666660; white-space: nowrap; }
+    .font-ctrl input[type="range"] {
+      flex: 1; height: 4px; accent-color: #185fa5; cursor: pointer;
+      border: none; border-radius: 0; background: transparent; box-shadow: none; padding: 0;
+    }
+    .font-size-steps { display: flex; gap: 4px; }
+    .step-btn {
+      font-size: calc(11px * var(--scale)); font-family: inherit;
+      padding: 3px 9px; border-radius: 6px; border: 0.5px solid rgba(0,0,0,0.2);
+      background: transparent; color: #1a1a18; cursor: pointer; transition: background 0.12s; white-space: nowrap;
+    }
+    .step-btn:hover { background: #f1efe8; }
+    .step-btn.active { background: #e6f1fb; border-color: rgba(24,95,165,0.4); color: #185fa5; }
+
+    .section-card {
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.12);
+      border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    }
+    .section-label {
+      font-size: calc(12px * var(--scale)); font-weight: 500; color: #666660;
+      letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 500;
+      background: #f1efe8; color: #1a1a18; border: 0.5px solid rgba(0,0,0,0.2);
+    }
+    .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: calc(12px * var(--scale)); color: #666660; }
+
+    input[type="text"], input[type="number"], input[type="date"] {
+      width: 100%; height: calc(36px * var(--scale)); padding: 0 10px;
+      font-size: calc(14px * var(--scale)); font-family: inherit;
+      border: 0.5px solid rgba(0,0,0,0.2); border-radius: 8px;
+      background: #fff; color: #1a1a18; outline: none; transition: border-color 0.15s;
+    }
+    input:focus { border-color: rgba(0,0,0,0.4); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
+
+    .calc-btn {
+      width: 100%; padding: 10px; font-size: calc(14px * var(--scale)); font-weight: 500;
+      font-family: inherit; cursor: pointer; border-radius: 8px;
+      border: 0.5px solid rgba(0,0,0,0.2); background: transparent;
+      color: #1a1a18; transition: background 0.12s; margin-top: 4px;
+    }
+    .calc-btn:hover { background: #f1efe8; }
+    .calc-btn:active { transform: scale(0.98); }
+
+    .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+    .metric-card { background: #f1efe8; border-radius: 8px; padding: 12px 14px; }
+    .metric-label { font-size: calc(12px * var(--scale)); color: #666660; margin-bottom: 4px; }
+    .metric-value { font-size: calc(22px * var(--scale)); font-weight: 500; color: #1a1a18; line-height: 1.2; }
+    .metric-value .unit { font-size: calc(13px * var(--scale)); font-weight: 400; color: #888780; margin-left: 2px; }
+    .metric-value.down { color: #0f6e56; }
+    .metric-sub { font-size: calc(11px * var(--scale)); color: #888780; margin-top: 3px; }
+    .result-footer {
+      margin-top: 12px; padding-top: 12px; border-top: 0.5px solid rgba(0,0,0,0.1);
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+      font-size: calc(12px * var(--scale)); color: #666660;
+    }
+    .empty-state { text-align: center; padding: 2rem 1rem; color: #888780; font-size: calc(13px * var(--scale)); }
+
+    /* 警告バナー */
+    .alert-banner {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px; border-radius: 10px; margin-top: 10px;
+      font-size: calc(13px * var(--scale)); font-weight: 500; line-height: 1.5; border: 1px solid transparent;
+    }
+    .alert-banner.level-0 { background: #fcebeb; color: #791f1f; border-color: #f09595; }
+    .alert-banner.level-1 { background: #faeeda; color: #633806; border-color: #fac775; }
+    .alert-banner.level-2 { background: #e6f1fb; color: #0c447c; border-color: #85b7eb; }
+    .alert-banner.level-3 { background: #f7c1c155; color: #4a1b0c; border-color: #f09595; }
+    .alert-icon { font-size: calc(16px * var(--scale)); flex-shrink: 0; margin-top: 1px; }
+
+    /* プリセット設定パネル */
+    .preset-panel { display: none; margin-top: 0.5rem; }
+    .preset-panel.open { display: block; }
+    .preset-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: start; margin-bottom: 10px; }
+    .preset-left { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; }
+    .preset-range-label { font-size: calc(12px * var(--scale)); color: #666660; white-space: nowrap; }
+    /* 境界値入力（小さい数値フィールド） */
+    .range-inputs { display: flex; align-items: center; gap: 4px; }
+    .range-input {
+      width: 52px !important; height: 28px !important;
+      font-size: calc(12px * var(--scale)) !important; padding: 0 6px !important;
+      text-align: center;
+    }
+    .range-sep { font-size: calc(12px * var(--scale)); color: #888780; }
+    .range-unit { font-size: calc(11px * var(--scale)); color: #888780; }
+    .preset-msg-input {
+      font-size: calc(13px * var(--scale)); font-family: inherit; padding: 6px 10px;
+      border: 0.5px solid rgba(0,0,0,0.2); border-radius: 8px;
+      width: 100%; background: #fff; color: #1a1a18; outline: none;
+      height: auto; resize: vertical; min-height: 38px; box-sizing: border-box;
+    }
+    .preset-msg-input:focus { border-color: rgba(0,0,0,0.4); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
+    .preset-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+    .preset-note { font-size: calc(11px * var(--scale)); color: #888780; margin-bottom: 10px; }
+    .toggle-preset-btn {
+      font-size: calc(12px * var(--scale)); font-family: inherit; padding: 4px 12px;
+      border-radius: 6px; border: 0.5px solid rgba(0,0,0,0.2);
+      background: transparent; color: #666660; cursor: pointer; transition: background 0.12s;
+    }
+    .toggle-preset-btn:hover { background: #f1efe8; }
+
+    /* ログエリア */
+    .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+    .log-header-label { font-size: calc(12px * var(--scale)); font-weight: 500; color: #666660; letter-spacing: 0.05em; }
+    .log-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-sm {
+      font-size: calc(12px * var(--scale)); font-family: inherit; padding: 5px 12px;
+      border-radius: 6px; border: 0.5px solid rgba(0,0,0,0.2);
+      background: transparent; color: #1a1a18; cursor: pointer; transition: background 0.12s;
+    }
+    .btn-sm:hover { background: #f1efe8; }
+    .btn-sm.danger { color: #a32d2d; border-color: #f09595; }
+    .btn-sm.danger:hover { background: #fcebeb; }
+    .btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .log-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: calc(13px * var(--scale)); min-width: 580px; }
+    thead th {
+      text-align: left; padding: 6px 10px; font-size: calc(11px * var(--scale));
+      font-weight: 500; color: #888780; border-bottom: 0.5px solid rgba(0,0,0,0.12); white-space: nowrap;
+    }
+    thead th.chk-col { width: 32px; text-align: center; }
+    tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr.selected { background: #e6f1fb55; }
+    tbody td { padding: 8px 10px; color: #1a1a18; white-space: nowrap; }
+    tbody td.chk-col { text-align: center; padding: 8px 6px; }
+    tbody td.down { color: #0f6e56; font-weight: 500; }
+    .no-log { text-align: center; padding: 1.5rem; color: #888780; font-size: calc(13px * var(--scale)); }
+
+    .badge-result {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; font-size: calc(11px * var(--scale));
+      font-weight: 500; background: #e6f1fb; color: #185fa5;
+    }
+    .result-section-label {
+      font-size: calc(12px * var(--scale)); font-weight: 500; color: #666660;
+      letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* チェックボックス */
+    input[type="checkbox"] {
+      width: 15px; height: 15px; accent-color: #185fa5; cursor: pointer;
+      border: none; background: transparent; box-shadow: none;
+    }
+
+    @media (max-width: 520px) {
+      .result-grid { grid-template-columns: 1fr; }
+      .result-footer { flex-direction: column; gap: 4px; }
+      .preset-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ナンピン計算ツール</h1>
+
+    <!-- 文字サイズ調整 -->
+    <div class="font-ctrl">
+      <span class="font-ctrl-label">文字サイズ</span>
+      <input type="range" id="font_range" min="80" max="150" step="10" value="100" oninput="setScale(this.value)" />
+      <div class="font-size-steps">
+        <button class="step-btn" onclick="setScale(80)"  id="btn80">小</button>
+        <button class="step-btn active" onclick="setScale(100)" id="btn100">標準</button>
+        <button class="step-btn" onclick="setScale(120)" id="btn120">大</button>
+        <button class="step-btn" onclick="setScale(140)" id="btn140">特大</button>
+      </div>
+    </div>
+
+    <!-- ① 現在の保有情報 -->
+    <div class="section-card">
+      <div class="section-label"><span class="badge">①</span> 現在の保有情報</div>
+      <div class="field-row">
+        <div class="field-group">
+          <span class="field-label">銘柄名</span>
+          <input type="text" id="ticker" placeholder="例: トヨタ自動車" />
+        </div>
+        <div class="field-group">
+          <span class="field-label">現在のロット数（株）</span>
+          <input type="number" id="cur_lots" placeholder="例: 100" min="0" step="1" />
+        </div>
+        <div class="field-group">
+          <span class="field-label">現在の平均取得価額（円）</span>
+          <input type="number" id="cur_price" placeholder="例: 3500" min="0" step="0.01" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ② ナンピン予定 -->
+    <div class="section-card">
+      <div class="section-label"><span class="badge">②</span> ナンピン予定</div>
+      <div class="field-row">
+        <div class="field-group">
+          <span class="field-label">取引予定日</span>
+          <input type="date" id="trade_date" />
+        </div>
+        <div class="field-group">
+          <span class="field-label">ナンピン予定ロット数（株）</span>
+          <input type="number" id="np_lots" placeholder="例: 100" min="0" step="1" />
+        </div>
+        <div class="field-group">
+          <span class="field-label">ナンピン予定価額（円）</span>
+          <input type="number" id="np_price" placeholder="例: 3000" min="0" step="0.01" />
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">計算する</button>
+
+    <!-- ③ 計算結果 -->
+    <div id="result_area" style="margin-top: 1rem;">
+      <div class="empty-state">① と ② を入力して「計算する」を押してください</div>
+    </div>
+
+    <!-- アドバイスメッセージ設定 -->
+    <div style="margin-top: 1.5rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <span style="font-size:calc(12px * var(--scale)); font-weight:500; color:#666660; letter-spacing:0.05em;">アドバイスメッセージ設定</span>
+        <button class="toggle-preset-btn" onclick="togglePreset()">編集</button>
+      </div>
+      <div class="preset-panel" id="preset_panel">
+        <div class="section-card" style="margin-bottom:0;">
+          <p class="preset-note">各段階の下落率の境界値とメッセージを自由に変更できます。境界値は①の上限が②の下限になります。</p>
+          <div class="preset-row">
+            <div class="preset-left">
+              <span class="preset-range-label">①</span>
+              <div class="range-inputs">
+                <input type="number" class="range-input" id="min0" value="0" min="0" max="99" step="1" readonly style="background:#f1efe8;" />
+                <span class="range-sep">〜</span>
+                <input type="number" class="range-input" id="max0" value="5" min="1" max="99" step="1" oninput="syncBoundaries(0)" />
+                <span class="range-unit">%</span>
+              </div>
+            </div>
+            <textarea class="preset-msg-input" id="msg0" rows="2"></textarea>
+          </div>
+          <div class="preset-row">
+            <div class="preset-left">
+              <span class="preset-range-label">②</span>
+              <div class="range-inputs">
+                <input type="number" class="range-input" id="min1" value="6" min="1" max="99" step="1" readonly style="background:#f1efe8;" />
+                <span class="range-sep">〜</span>
+                <input type="number" class="range-input" id="max1" value="15" min="1" max="99" step="1" oninput="syncBoundaries(1)" />
+                <span class="range-unit">%</span>
+              </div>
+            </div>
+            <textarea class="preset-msg-input" id="msg1" rows="2"></textarea>
+          </div>
+          <div class="preset-row">
+            <div class="preset-left">
+              <span class="preset-range-label">③</span>
+              <div class="range-inputs">
+                <input type="number" class="range-input" id="min2" value="16" min="1" max="99" step="1" readonly style="background:#f1efe8;" />
+                <span class="range-sep">〜</span>
+                <input type="number" class="range-input" id="max2" value="30" min="1" max="99" step="1" oninput="syncBoundaries(2)" />
+                <span class="range-unit">%</span>
+              </div>
+            </div>
+            <textarea class="preset-msg-input" id="msg2" rows="2"></textarea>
+          </div>
+          <div class="preset-row">
+            <div class="preset-left">
+              <span class="preset-range-label">④</span>
+              <div class="range-inputs">
+                <input type="number" class="range-input" id="min3" readonly style="background:#f1efe8;" />
+                <span class="range-sep">〜</span>
+                <span style="font-size:calc(12px * var(--scale)); color:#888780; padding: 0 4px;">以上</span>
+              </div>
+            </div>
+            <textarea class="preset-msg-input" id="msg3" rows="2"></textarea>
+          </div>
+          <div class="preset-actions">
+            <button class="btn-sm danger" onclick="resetPresets()">デフォルトに戻す</button>
+            <button class="btn-sm" onclick="savePresets()">保存して閉じる</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ログ -->
+    <div class="section-card" style="margin-top: 1.5rem;">
+      <div class="log-header">
+        <span class="log-header-label">ナンピンログ</span>
+        <div class="log-actions">
+          <button class="btn-sm" onclick="exportCSV()">CSVで保存</button>
+          <button class="btn-sm" id="btn_select_all" onclick="toggleSelectAll()">すべて選択</button>
+          <button class="btn-sm danger" id="btn_delete_selected" onclick="deleteSelected()" disabled>選択を削除</button>
+        </div>
+      </div>
+      <div class="log-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="chk-col"><input type="checkbox" id="chk_all" onchange="toggleSelectAll()" /></th>
+              <th>取引日</th>
+              <th>銘柄</th>
+              <th>元ロット</th>
+              <th>元平均価額</th>
+              <th>追加ロット</th>
+              <th>ナンピン価額</th>
+              <th>最終ロット</th>
+              <th>新平均価額</th>
+              <th>下落率</th>
+            </tr>
+          </thead>
+          <tbody id="log_body">
+            <tr><td colspan="10" class="no-log">ログはまだありません</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── デフォルトメッセージプリセット ──────────────────────
+    const DEFAULT_PRESETS = [
+      { min: 0,  max: 5,    icon: '⛔', level: 0, msg: 'ナンピンの効果が見込めません。このナンピン本当に必要ですか？' },
+      { min: 6,  max: 15,   icon: '⚠️', level: 1, msg: 'ナンピンの効果が見込めます。ただし、明日も続落するようなチャートではないですよね？' },
+      { min: 16, max: 30,   icon: '💡', level: 2, msg: 'ナンピンの効果が非常に高いです。確認ですが、カタリストが出て、上昇する見込みが全くない・上場廃止になるようなケースではないですよね？' },
+      { min: 31, max: 9999, icon: '🚨', level: 3, msg: 'このナンピン意味ありますか？' }
+    ];
+
+    function getPresets() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('nanpin_presets') || 'null');
+        if (saved && saved.length === 4) return saved;
+      } catch(e) {}
+      return DEFAULT_PRESETS.map(p => ({ ...p }));
+    }
+
+    function savePresetsData(arr) {
+      localStorage.setItem('nanpin_presets', JSON.stringify(arr));
+    }
+
+    function loadPresetInputs() {
+      const presets = getPresets();
+      presets.forEach((p, i) => {
+        const msg = document.getElementById('msg' + i);
+        const minEl = document.getElementById('min' + i);
+        const maxEl = document.getElementById('max' + i);
+        if (msg) msg.value = p.msg;
+        if (minEl) minEl.value = p.min;
+        if (maxEl && i < 3) maxEl.value = p.max;
+      });
+      // ④のmin（下限）だけ表示
+      const min3 = document.getElementById('min3');
+      if (min3) min3.value = getPresets()[2].max + 1;
+    }
+
+    // 境界値を変更したとき、次の段階のminを自動連動
+    function syncBoundaries(idx) {
+      if (idx >= 3) return;
+      const maxEl = document.getElementById('max' + idx);
+      const nextMinEl = document.getElementById('min' + (idx + 1));
+      let val = parseInt(maxEl.value) || 0;
+      // 最低でも前のminより1大きい値にする
+      const minEl = document.getElementById('min' + idx);
+      const minVal = parseInt(minEl.value) || 0;
+      if (val <= minVal) { val = minVal + 1; maxEl.value = val; }
+      if (val > 99) { val = 99; maxEl.value = val; }
+      if (nextMinEl) nextMinEl.value = val + 1;
+      // ④のmin更新
+      if (idx === 2) {
+        const min3 = document.getElementById('min3');
+        if (min3) min3.value = val + 1;
+      }
+      if (idx < 2) syncBoundaries(idx + 1);
+    }
+
+    function savePresets() {
+      const presets = getPresets();
+      presets.forEach((p, i) => {
+        const msg = document.getElementById('msg' + i);
+        const maxEl = document.getElementById('max' + i);
+        const minEl = document.getElementById('min' + i);
+        if (msg) p.msg = msg.value.trim() || DEFAULT_PRESETS[i].msg;
+        if (minEl) p.min = parseInt(minEl.value) || DEFAULT_PRESETS[i].min;
+        if (maxEl && i < 3) p.max = parseInt(maxEl.value) || DEFAULT_PRESETS[i].max;
+      });
+      // ④のminを③のmax+1に
+      presets[3].min = presets[2].max + 1;
+      presets[3].max = 9999;
+      savePresetsData(presets);
+      togglePreset(false);
+    }
+
+    function resetPresets() {
+      if (!confirm('境界値とメッセージをデフォルトに戻しますか？')) return;
+      savePresetsData(DEFAULT_PRESETS.map(p => ({ ...p })));
+      loadPresetInputs();
+    }
+
+    function togglePreset(forceClose) {
+      const panel = document.getElementById('preset_panel');
+      if (forceClose === false || panel.classList.contains('open')) {
+        panel.classList.remove('open');
+      } else {
+        loadPresetInputs();
+        panel.classList.add('open');
+      }
+    }
+
+    function getAlertForDrop(dropPct) {
+      const presets = getPresets();
+      return presets.find(p => dropPct >= p.min && dropPct <= p.max) || null;
+    }
+
+    // ── 文字サイズ ───────────────────────────────────────
+    function setScale(val) {
+      val = parseInt(val);
+      document.documentElement.style.setProperty('--scale', val / 100);
+      document.getElementById('font_range').value = val;
+      [80, 100, 120, 140].forEach(v => {
+        const b = document.getElementById('btn' + v);
+        if (b) b.classList.toggle('active', v === val);
+      });
+      localStorage.setItem('nanpin_font_scale', val);
+    }
+
+    // ── 初期化 ───────────────────────────────────────────
+    (function() {
+      const savedScale = parseInt(localStorage.getItem('nanpin_font_scale') || '100');
+      setScale(savedScale);
+      document.getElementById('trade_date').value = new Date().toISOString().split('T')[0];
+      loadPresetInputs();
+      renderLog();
+    })();
+
+    // ── 数値フォーマット ──────────────────────────────────
+    function fmtNum(n, decimals) {
+      return n.toLocaleString('ja-JP', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    // ── ログ操作 ──────────────────────────────────────────
+    function getLog() {
+      try { return JSON.parse(localStorage.getItem('nanpin_log') || '[]'); } catch(e) { return []; }
+    }
+    function saveLog(log) { localStorage.setItem('nanpin_log', JSON.stringify(log)); }
+
+    function renderLog() {
+      const log = getLog();
+      const tbody = document.getElementById('log_body');
+      if (log.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="no-log">ログはまだありません</td></tr>';
+        updateDeleteBtn();
+        return;
+      }
+      // 新しい順に表示。インデックスは元配列の逆順
+      const reversed = log.map((r, i) => ({ ...r, origIdx: i })).reverse();
+      tbody.innerHTML = reversed.map(r => `
+        <tr data-idx="${r.origIdx}">
+          <td class="chk-col"><input type="checkbox" class="row-chk" onchange="onRowCheck()" /></td>
+          <td>${r.date}</td>
+          <td>${r.ticker}</td>
+          <td>${fmtNum(r.curLots, 0)}</td>
+          <td>¥${fmtNum(r.curPrice, 2)}</td>
+          <td>${fmtNum(r.npLots, 0)}</td>
+          <td>¥${fmtNum(r.npPrice, 2)}</td>
+          <td>${fmtNum(r.totalLots, 0)}</td>
+          <td>¥${fmtNum(r.newAvg, 2)}</td>
+          <td class="down">▼${fmtNum(r.dropPct, 2)}%</td>
+        </tr>
+      `).join('');
+      updateDeleteBtn();
+    }
+
+    function onRowCheck() {
+      const chks = document.querySelectorAll('.row-chk');
+      const all = document.getElementById('chk_all');
+      const checked = document.querySelectorAll('.row-chk:checked');
+      // 行の背景を更新
+      chks.forEach(c => {
+        const tr = c.closest('tr');
+        if (tr) tr.classList.toggle('selected', c.checked);
+      });
+      all.checked = chks.length > 0 && checked.length === chks.length;
+      all.indeterminate = checked.length > 0 && checked.length < chks.length;
+      updateDeleteBtn();
+    }
+
+    function toggleSelectAll() {
+      const all = document.getElementById('chk_all');
+      const chks = document.querySelectorAll('.row-chk');
+      // ボタン経由なら全チェック状態を反転
+      const anyUnchecked = Array.from(chks).some(c => !c.checked);
+      chks.forEach(c => { c.checked = anyUnchecked; });
+      all.checked = anyUnchecked;
+      all.indeterminate = false;
+      onRowCheck();
+    }
+
+    function updateDeleteBtn() {
+      const btn = document.getElementById('btn_delete_selected');
+      const checked = document.querySelectorAll('.row-chk:checked');
+      btn.disabled = checked.length === 0;
+      btn.textContent = checked.length > 0 ? `選択を削除（${checked.length}件）` : '選択を削除';
+    }
+
+    function deleteSelected() {
+      const checked = document.querySelectorAll('.row-chk:checked');
+      if (checked.length === 0) return;
+      if (!confirm(`チェックした ${checked.length} 件のログを削除しますか？`)) return;
+      const toDelete = new Set();
+      checked.forEach(c => {
+        const tr = c.closest('tr');
+        if (tr) toDelete.add(parseInt(tr.dataset.idx));
+      });
+      const log = getLog().filter((_, i) => !toDelete.has(i));
+      saveLog(log);
+      // チェックボックスをリセット
+      const all = document.getElementById('chk_all');
+      if (all) { all.checked = false; all.indeterminate = false; }
+      renderLog();
+    }
+
+    // ── 計算 ─────────────────────────────────────────────
+    function calculate() {
+      const ticker    = document.getElementById('ticker').value.trim() || '—';
+      const curLots   = parseFloat(document.getElementById('cur_lots').value);
+      const curPrice  = parseFloat(document.getElementById('cur_price').value);
+      const npLots    = parseFloat(document.getElementById('np_lots').value);
+      const npPrice   = parseFloat(document.getElementById('np_price').value);
+      const tradeDate = document.getElementById('trade_date').value || new Date().toISOString().split('T')[0];
+
+      if (isNaN(curLots) || isNaN(curPrice) || isNaN(npLots) || isNaN(npPrice) || curLots <= 0 || npLots <= 0) {
+        document.getElementById('result_area').innerHTML =
+          '<div class="empty-state" style="color:#a32d2d;">すべての数値を正しく入力してください</div>';
+        return;
+      }
+
+      const totalLots = curLots + npLots;
+      const newAvg    = (curLots * curPrice + npLots * npPrice) / totalLots;
+      const dropPct   = Math.abs((newAvg - curPrice) / curPrice * 100);
+      const dropYen   = curPrice - newAvg;
+      const dateLabel = tradeDate.replace(/-/g, '/');
+
+      const alertData = getAlertForDrop(dropPct);
+      const alertHTML = alertData ? `
+        <div class="alert-banner level-${alertData.level}">
+          <span class="alert-icon">${alertData.icon}</span>
+          <span>${alertData.msg}</span>
+        </div>` : '';
+
+      document.getElementById('result_area').innerHTML = `
+        <div class="section-card" style="border-color: rgba(24,95,165,0.3);">
+          <div class="result-section-label">
+            <span class="badge-result">③</span> 計算結果
+            <span style="font-size:calc(12px * var(--scale));color:#888780;font-weight:400;margin-left:auto;">${ticker}　${dateLabel}</span>
+          </div>
+          <div class="result-grid">
+            <div class="metric-card">
+              <div class="metric-label">最終ロット数</div>
+              <div class="metric-value">${fmtNum(totalLots, 0)}<span class="unit">株</span></div>
+              <div class="metric-sub">+${fmtNum(npLots, 0)} 株追加</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">ナンピン後の平均取得価額</div>
+              <div class="metric-value">¥${fmtNum(newAvg, 2)}</div>
+              <div class="metric-sub">取得前: ¥${fmtNum(curPrice, 2)}</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">平均取得価格の変化率</div>
+              <div class="metric-value down">▼ ${fmtNum(dropPct, 2)}<span class="unit">%</span></div>
+              <div class="metric-sub">¥${fmtNum(dropYen, 2)} 下落</div>
+            </div>
+          </div>
+          ${alertHTML}
+          <div class="result-footer">
+            <span>取得総額: ¥${fmtNum(curLots * curPrice + npLots * npPrice, 0)}</span>
+            <span>ナンピン前総額: ¥${fmtNum(curLots * curPrice, 0)}</span>
+            <span>追加投資額: ¥${fmtNum(npLots * npPrice, 0)}</span>
+          </div>
+          <button class="btn-sm" style="margin-top:12px;" onclick="addToLog(
+            '${tradeDate}','${ticker}',${curLots},${curPrice},${npLots},${npPrice},${totalLots},${newAvg},${dropPct}
+          )">このログを保存</button>
+        </div>
+      `;
+    }
+
+    function addToLog(date, ticker, curLots, curPrice, npLots, npPrice, totalLots, newAvg, dropPct) {
+      const log = getLog();
+      log.push({ date, ticker, curLots, curPrice, npLots, npPrice, totalLots, newAvg, dropPct });
+      saveLog(log);
+      renderLog();
+      const btn = document.querySelector('#result_area .btn-sm');
+      if (btn) { btn.textContent = '保存しました ✓'; btn.disabled = true; }
+    }
+
+    // ── CSV出力 ───────────────────────────────────────────
+    function exportCSV() {
+      const log = getLog();
+      if (log.length === 0) { alert('ログがありません'); return; }
+      const header = ['取引日','銘柄','元ロット','元平均価額','追加ロット','ナンピン価額','最終ロット','新平均価額','下落率(%)'];
+      const rows = log.map(r =>
+        [r.date, r.ticker, r.curLots, r.curPrice.toFixed(2), r.npLots, r.npPrice.toFixed(2),
+         r.totalLots, r.newAvg.toFixed(2), r.dropPct.toFixed(2)]
+      );
+      const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nanpin_log_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
