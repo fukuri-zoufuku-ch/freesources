@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>建玉管理アプリ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:sans-serif;background:#fff;color:#1a1a1a;}
+.app{padding:1.5rem;}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.15);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
+.sec-label{font-size:11px;font-weight:500;color:#666;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg label{font-size:12px;color:#666;}
+.fg input,.fg select{height:34px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.3);border-radius:8px;background:#f5f5f5;color:#1a1a1a;font-size:13px;}
+.fg input:focus,.fg select:focus{outline:none;border-color:rgba(0,0,0,0.5);}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.btn-primary{background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:0 16px;height:34px;font-size:13px;cursor:pointer;}
+.btn-primary:hover{opacity:0.8;}
+.btn-sec{background:transparent;color:#666;border:0.5px solid rgba(0,0,0,0.3);border-radius:8px;padding:0 14px;height:34px;font-size:13px;cursor:pointer;}
+.btn-sec:hover{background:#f5f5f5;}
+.btn-danger{background:transparent;color:#A32D2D;border:0.5px solid #F09595;border-radius:8px;padding:0 14px;height:34px;font-size:13px;cursor:pointer;}
+.btn-danger:hover{background:#FCEBEB;}
+.err{font-size:12px;color:#A32D2D;margin-top:6px;min-height:16px;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:1.25rem;}
+.metric{background:#f5f5f5;border-radius:8px;padding:10px 12px;}
+.metric-label{font-size:11px;color:#666;margin-bottom:3px;}
+.metric-val{font-size:18px;font-weight:500;color:#1a1a1a;}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:#f5f5f5;color:#666;font-weight:500;padding:7px 10px;text-align:right;border-bottom:0.5px solid rgba(0,0,0,0.15);white-space:nowrap;font-size:11px;}
+thead th.tl{text-align:left;}
+tbody tr{border-bottom:0.5px solid rgba(0,0,0,0.15);}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9f9f9;}
+tbody td{padding:7px 10px;text-align:right;color:#1a1a1a;white-space:nowrap;font-size:13px;}
+tbody td.tl{text-align:left;}
+.pos{color:#3B6D11;}.neg{color:#A32D2D;}
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:100px;}
+.tag-s{background:#FCEBEB;color:#A32D2D;}
+.tag-b{background:#EAF3DE;color:#3B6D11;}
+.badge-spot{background:#E6F1FB;color:#185FA5;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500;}
+.badge-short{background:#FAEEDA;color:#854F0B;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500;}
+.badge-buy{background:#EAF3DE;color:#3B6D11;font-size:11px;padding:2px 7px;border-radius:100px;font-weight:500;}
+.del{cursor:pointer;color:#aaa;background:none;border:none;font-size:12px;padding:2px 5px;border-radius:4px;}
+.del:hover{color:#A32D2D;background:#FCEBEB;}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px;}
+.ticker-section{margin-bottom:1.5rem;}
+.ticker-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid rgba(0,0,0,0.15);}
+.ticker-name{font-size:15px;font-weight:500;color:#1a1a1a;}
+.ticker-sub{font-size:12px;color:#666;}
+.master-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.master-chip{display:flex;align-items:center;gap:4px;background:#f5f5f5;border:0.5px solid rgba(0,0,0,0.3);border-radius:8px;padding:4px 10px;font-size:12px;color:#1a1a1a;}
+.master-chip button{background:none;border:none;cursor:pointer;color:#aaa;font-size:12px;padding:0 2px;line-height:1;}
+.master-chip button:hover{color:#A32D2D;}
+.master-add{display:flex;gap:6px;align-items:center;}
+.master-add input{height:30px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.3);border-radius:8px;background:#f5f5f5;color:#1a1a1a;font-size:12px;width:90px;}
+.master-add input:focus{outline:none;border-color:rgba(0,0,0,0.5);}
+.master-add .name-inp{width:130px;}
+.file-label{display:inline-flex;align-items:center;gap:6px;background:transparent;color:#666;border:0.5px solid rgba(0,0,0,0.3);border-radius:8px;padding:0 14px;height:34px;font-size:13px;cursor:pointer;}
+.file-label:hover{background:#f5f5f5;}
+</style>
+</head>
+<body>
+<div class="app">
+<h1 style="font-size:18px;font-weight:500;margin-bottom:1.25rem;">建玉管理アプリ</h1>
+
+<div class="card">
+  <div class="sec-label">銘柄マスター設定</div>
+  <div class="master-list" id="master-list"></div>
+  <div class="master-add">
+    <input type="text" id="m-code" placeholder="コード 例:7203" maxlength="6">
+    <input type="text" id="m-name" class="name-inp" placeholder="銘柄名 例:トヨタ">
+    <button class="btn-primary" onclick="addMaster()">銘柄追加</button>
+  </div>
+  <div class="err" id="m-err"></div>
+</div>
+
+<div class="card">
+  <div class="sec-label">取引入力</div>
+  <div class="form-grid">
+    <div class="fg"><label>日付</label><input type="date" id="i-date"></div>
+    <div class="fg">
+      <label>銘柄</label>
+      <select id="i-ticker"><option value="">— 銘柄を選択 —</option></select>
+    </div>
+    <div class="fg">
+      <label>取引種別</label>
+      <select id="i-type">
+        <option value="buy">買い建て</option>
+        <option value="sell_spot">現物売り（決済）</option>
+        <option value="sell_short">空売り（売り建て）</option>
+      </select>
+    </div>
+    <div class="fg"><label>ロット数</label><input type="number" id="i-lot" placeholder="100" min="1" step="1"></div>
+    <div class="fg"><label>約定価格</label><input type="number" id="i-price" placeholder="2500" step="0.01" min="0"></div>
+    <div class="fg"><label>終値</label><input type="number" id="i-close" placeholder="2520" step="0.01" min="0"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="addTrade()">追加</button>
+    <button class="btn-sec" onclick="loadSample()">サンプルデータ</button>
+    <button class="btn-danger" onclick="clearAll()">全クリア</button>
+  </div>
+  <div class="err" id="t-err"></div>
+</div>
+
+<div class="metrics">
+  <div class="metric"><div class="metric-label">取引件数</div><div class="metric-val" id="m-count">0</div></div>
+  <div class="metric"><div class="metric-label">買いポジ合計</div><div class="metric-val" id="m-buy">0</div></div>
+  <div class="metric"><div class="metric-label">売りポジ合計</div><div class="metric-val" id="m-sell">0</div></div>
+  <div class="metric"><div class="metric-label">含み損益合計</div><div class="metric-val" id="m-pnl">0</div></div>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+    <div class="sec-label" style="margin-bottom:0;">建玉推移（銘柄別）</div>
+  </div>
+  <div id="pos-sections"><div class="empty">取引を追加すると銘柄別推移が表示されます</div></div>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+    <div class="sec-label" style="margin-bottom:0;">取引ログ</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-sec" onclick="exportCSV()">CSV ダウンロード</button>
+      <label class="file-label">
+        CSV 取り込み
+        <input type="file" accept=".csv" style="display:none;" onchange="importCSV(event)">
+      </label>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="tl">日付</th>
+          <th class="tl">コード</th>
+          <th class="tl">銘柄名</th>
+          <th class="tl">種別</th>
+          <th>ロット</th>
+          <th>約定価格</th>
+          <th>終値</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="log-tbody">
+        <tr><td colspan="8" class="empty">取引ログがありません</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<script>
+let masters=[];
+let trades=[];
+
+function today(){return new Date().toISOString().slice(0,10);}
+document.getElementById('i-date').value=today();
+
+function fmt(n,dec=0){
+  if(n===null||n===undefined||isNaN(n))return '—';
+  return n.toLocaleString('ja-JP',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function fmtPnl(n){
+  if(n===null||isNaN(n))return '—';
+  const s=Math.abs(Math.round(n)).toLocaleString('ja-JP');
+  return (n>=0?'+':'-')+s;
+}
+function setErr(id,msg){document.getElementById(id).textContent=msg||'';}
+
+function addMaster(){
+  const code=document.getElementById('m-code').value.trim().toUpperCase();
+  const name=document.getElementById('m-name').value.trim();
+  if(!code){setErr('m-err','コードを入力してください');return;}
+  if(masters.find(m=>m.code===code)){setErr('m-err','同じコードがすでに登録されています');return;}
+  setErr('m-err','');
+  masters.push({code,name:name||code});
+  document.getElementById('m-code').value='';
+  document.getElementById('m-name').value='';
+  renderMaster();
+  renderTickerSelect();
+}
+
+function removeMaster(code){
+  if(trades.find(t=>t.ticker===code)){
+    if(!confirm(code+' の取引ログが存在します。削除しますか？'))return;
+    trades=trades.filter(t=>t.ticker!==code);
+  }
+  masters=masters.filter(m=>m.code!==code);
+  renderMaster();
+  renderTickerSelect();
+  render();
+}
+
+function renderMaster(){
+  const el=document.getElementById('master-list');
+  if(masters.length===0){el.innerHTML='<span style="font-size:12px;color:#aaa;">銘柄が未登録です</span>';return;}
+  el.innerHTML=masters.map(m=>
+    '<div class="master-chip"><span style="font-weight:500;">'+m.code+'</span><span style="color:#666;">'+m.name+'</span><button onclick="removeMaster(\''+m.code+'\')">✕</button></div>'
+  ).join('');
+}
+
+function renderTickerSelect(){
+  const sel=document.getElementById('i-ticker');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— 銘柄を選択 —</option>'+
+    masters.map(m=>'<option value="'+m.code+'">'+m.code+'（'+m.name+'）</option>').join('');
+  if(masters.find(m=>m.code===cur))sel.value=cur;
+}
+
+function getMasterName(code){
+  const m=masters.find(x=>x.code===code);
+  return m?m.name:code;
+}
+
+function addTrade(){
+  const date=document.getElementById('i-date').value;
+  const ticker=document.getElementById('i-ticker').value;
+  const type=document.getElementById('i-type').value;
+  const lot=parseFloat(document.getElementById('i-lot').value);
+  const price=parseFloat(document.getElementById('i-price').value);
+  const close=parseFloat(document.getElementById('i-close').value);
+  if(!date){setErr('t-err','日付を入力してください');return;}
+  if(!ticker){setErr('t-err','銘柄を選択してください');return;}
+  if(isNaN(lot)||lot<=0){setErr('t-err','ロット数を正しく入力してください');return;}
+  if(isNaN(price)||price<0){setErr('t-err','約定価格を入力してください');return;}
+  if(isNaN(close)||close<0){setErr('t-err','終値を入力してください');return;}
+  if(type==='sell_spot'){
+    const bl=getBuyLotAt(ticker,date);
+    if(bl<=0){setErr('t-err','買い建てポジションがないため現物売りできません');return;}
+    if(lot>bl){setErr('t-err','現物売り可能ロットは最大 '+bl+' です');return;}
+  }
+  setErr('t-err','');
+  trades.push({id:Date.now()+(Math.random()*100|0),date,ticker,type,lot,price,close});
+  trades.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  document.getElementById('i-lot').value='';
+  document.getElementById('i-price').value='';
+  document.getElementById('i-close').value='';
+  render();
+}
+
+function getBuyLotAt(ticker,beforeDate){
+  let net=0;
+  for(const t of trades){
+    if(t.ticker!==ticker||t.date>beforeDate)continue;
+    if(t.type==='buy')net+=t.lot;
+    else if(t.type==='sell_spot')net-=t.lot;
+  }
+  return Math.max(0,net);
+}
+
+function deleteTrade(id){trades=trades.filter(t=>t.id!==id);render();}
+function clearAll(){if(confirm('全取引ログを削除しますか？')){trades=[];render();}}
+
+function loadSample(){
+  if(masters.length===0){
+    masters=[{code:'7203',name:'トヨタ'},{code:'9984',name:'ソフトバンクG'},{code:'6758',name:'ソニーG'}];
+    renderMaster();renderTickerSelect();
+  }
+  trades=[
+    {id:1,date:'2025-04-01',ticker:'7203',type:'buy',lot:200,price:2800,close:2850},
+    {id:2,date:'2025-04-01',ticker:'9984',type:'buy',lot:100,price:9200,close:9150},
+    {id:3,date:'2025-04-03',ticker:'7203',type:'buy',lot:100,price:2820,close:2890},
+    {id:4,date:'2025-04-03',ticker:'9984',type:'sell_short',lot:50,price:9300,close:9150},
+    {id:5,date:'2025-04-07',ticker:'7203',type:'sell_spot',lot:100,price:2900,close:2920},
+    {id:6,date:'2025-04-07',ticker:'6758',type:'buy',lot:50,price:3200,close:3250},
+    {id:7,date:'2025-04-10',ticker:'9984',type:'buy',lot:80,price:9100,close:9200},
+    {id:8,date:'2025-04-10',ticker:'7203',type:'sell_short',lot:50,price:2950,close:2920},
+  ];
+  render();
+}
+
+function computePositions(){
+  const allDates=[...new Set(trades.map(t=>t.date))].sort();
+  const allTickers=[...new Set(trades.map(t=>t.ticker))];
+  const byTicker={};
+  for(const ticker of allTickers){
+    byTicker[ticker]=[];
+    for(const date of allDates){
+      const dayT=trades.filter(t=>t.date===date&&t.ticker===ticker);
+      if(dayT.length===0)continue;
+      const cl=dayT[dayT.length-1].close;
+      const upTo=trades.filter(t=>t.ticker===ticker&&t.date<=date);
+      let buyLot=0,buyCost=0,shortLot=0,shortCost=0;
+      for(const t of upTo){
+        if(t.type==='buy'){buyLot+=t.lot;buyCost+=t.price*t.lot;}
+        else if(t.type==='sell_spot'){const avg=buyLot>0?buyCost/buyLot:0;const r=Math.min(t.lot,buyLot);buyCost-=avg*r;buyLot-=r;}
+        else if(t.type==='sell_short'){shortLot+=t.lot;shortCost+=t.price*t.lot;}
+      }
+      const buyAvg=buyLot>0?buyCost/buyLot:null;
+      const shortAvg=shortLot>0?shortCost/shortLot:null;
+      let pnl=0;
+      if(buyLot>0&&cl!=null)pnl+=(cl-buyAvg)*buyLot;
+      if(shortLot>0&&cl!=null)pnl+=(shortAvg-cl)*shortLot;
+      byTicker[ticker].push({date,close:cl,shortAvg,shortLot,buyLot,buyAvg,pnl});
+    }
+  }
+  return byTicker;
+}
+
+function render(){
+  const byTicker=computePositions();
+  const allTickers=Object.keys(byTicker);
+  let totalBuy=0,totalSell=0,totalPnl=0;
+  for(const ticker of allTickers){
+    const rows=byTicker[ticker];
+    if(!rows.length)continue;
+    const last=rows[rows.length-1];
+    totalBuy+=last.buyLot;totalSell+=last.shortLot;totalPnl+=last.pnl||0;
+  }
+  document.getElementById('m-count').textContent=trades.length;
+  document.getElementById('m-buy').textContent=fmt(totalBuy);
+  document.getElementById('m-sell').textContent=fmt(totalSell);
+  const pnlEl=document.getElementById('m-pnl');
+  pnlEl.textContent=(totalPnl>=0?'+':'-')+Math.abs(Math.round(totalPnl)).toLocaleString('ja-JP');
+  pnlEl.style.color=totalPnl>=0?'#3B6D11':'#A32D2D';
+
+  const posEl=document.getElementById('pos-sections');
+  if(allTickers.length===0){
+    posEl.innerHTML='<div class="empty">取引を追加すると銘柄別推移が表示されます</div>';
+  } else {
+    posEl.innerHTML=allTickers.map(function(ticker){
+      const rows=byTicker[ticker];
+      const name=getMasterName(ticker);
+      const last=rows[rows.length-1];
+      const latestPnl=last?last.pnl:0;
+      const pnlClass=latestPnl>=0?'pos':'neg';
+      const tableRows=rows.map(function(r){
+        const sc=r.shortLot>0?'<span class="tag tag-s">'+fmt(r.shortAvg,1)+'</span>':'<span style="color:#aaa">—</span>';
+        const sl=r.shortLot>0?'<span style="color:#A32D2D;font-weight:500;">'+fmt(r.shortLot)+'</span>':'<span style="color:#aaa">—</span>';
+        const bl=r.buyLot>0?'<span style="color:#3B6D11;font-weight:500;">'+fmt(r.buyLot)+'</span>':'<span style="color:#aaa">—</span>';
+        const bc=r.buyLot>0?'<span class="tag tag-b">'+fmt(r.buyAvg,1)+'</span>':'<span style="color:#aaa">—</span>';
+        const pc=r.pnl>=0?'pos':'neg';
+        return '<tr><td class="tl" style="color:#666;font-size:12px;">'+r.date+'</td><td>'+fmt(r.close,1)+'</td><td>'+sc+'</td><td>'+sl+'</td><td>'+bl+'</td><td>'+bc+'</td><td class="'+pc+'" style="font-weight:500;">'+fmtPnl(r.pnl)+'</td></tr>';
+      }).join('');
+      return '<div class="ticker-section"><div class="ticker-header"><span class="ticker-name">'+ticker+'</span><span class="ticker-sub">'+name+'</span><span style="margin-left:auto;font-size:13px;font-weight:500;" class="'+pnlClass+'">'+(last?fmtPnl(last.pnl):'—')+'</span></div><div class="table-scroll"><table style="min-width:520px;"><thead><tr><th class="tl">日付</th><th>終値</th><th>売り建て均値</th><th>売りロット</th><th>買いロット</th><th>買い建て均値</th><th>含み損益</th></tr></thead><tbody>'+tableRows+'</tbody></table></div></div>';
+    }).join('');
+  }
+
+  const logTbody=document.getElementById('log-tbody');
+  if(trades.length===0){
+    logTbody.innerHTML='<tr><td colspan="8" class="empty">取引ログがありません</td></tr>';
+  } else {
+    logTbody.innerHTML=[...trades].reverse().map(function(t){
+      const badge=t.type==='buy'?'<span class="badge-buy">買い建て</span>':t.type==='sell_spot'?'<span class="badge-spot">現物売り</span>':'<span class="badge-short">空売り</span>';
+      return '<tr><td class="tl" style="color:#666;font-size:12px;">'+t.date+'</td><td class="tl" style="font-weight:500;">'+t.ticker+'</td><td class="tl" style="color:#666;">'+getMasterName(t.ticker)+'</td><td class="tl">'+badge+'</td><td>'+fmt(t.lot)+'</td><td>'+fmt(t.price,1)+'</td><td>'+fmt(t.close,1)+'</td><td><button class="del" onclick="deleteTrade('+t.id+')">✕</button></td></tr>';
+    }).join('');
+  }
+}
+
+function exportCSV(){
+  if(trades.length===0){alert('取引ログがありません');return;}
+  const header='id,date,ticker,name,type,lot,price,close';
+  const rows=trades.map(function(t){return [t.id,t.date,t.ticker,getMasterName(t.ticker),t.type,t.lot,t.price,t.close].join(',');});
+  const csv='\uFEFF'+[header].concat(rows).join('\r\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='trade_log_'+today()+'.csv';
+  a.click();
+}
+
+function importCSV(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const text=ev.target.result.replace(/^\uFEFF/,'');
+    const lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
+    if(lines.length<2){alert('CSVにデータがありません');return;}
+    const headers=lines[0].split(',').map(function(h){return h.trim();});
+    const idx={};
+    ['id','date','ticker','name','type','lot','price','close'].forEach(function(k){idx[k]=headers.indexOf(k);});
+    if(idx.date<0||idx.ticker<0||idx.type<0){alert('CSVの形式が正しくありません（date,ticker,type列が必要です）');return;}
+    let added=0,skipped=0;
+    for(let i=1;i<lines.length;i++){
+      const cols=lines[i].split(',');
+      const date=cols[idx.date]?cols[idx.date].trim():'';
+      const ticker=cols[idx.ticker]?cols[idx.ticker].trim().toUpperCase():'';
+      const type=cols[idx.type]?cols[idx.type].trim():'';
+      const lot=parseFloat(cols[idx.lot]);
+      const price=parseFloat(cols[idx.price]);
+      const close=parseFloat(cols[idx.close]);
+      const name=idx.name>=0&&cols[idx.name]?cols[idx.name].trim():'';
+      if(!date||!ticker||!['buy','sell_spot','sell_short'].includes(type)||isNaN(lot)||isNaN(price)||isNaN(close)){skipped++;continue;}
+      if(!masters.find(function(m){return m.code===ticker;})){masters.push({code:ticker,name:name||ticker});renderMaster();renderTickerSelect();}
+      trades.push({id:Date.now()+(Math.random()*1000|0)+i,date,ticker,type,lot,price,close});
+      added++;
+    }
+    trades.sort(function(a,b){return a.date.localeCompare(b.date)||a.id-b.id;});
+    render();
+    alert('取り込み完了：'+added+'件追加、'+skipped+'件スキップ');
+    e.target.value='';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+renderMaster();
+renderTickerSelect();
+render();
+</script>
+</body>
+</html>
